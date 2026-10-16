@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   ExternalLink,
@@ -12,12 +12,16 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Search,
   Mail,
   FileText,
   Copy,
-  Sparkles
+  Sparkles,
+  Filter,
+  X
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/agent';
@@ -139,7 +143,15 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'stream' | 'standup'>('stream');
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [backlogSearch, setBacklogSearch] = useState('');
+  const [backlogFilter, setBacklogFilter] = useState<'all' | 'bug' | 'prd'>('all');
   const [copiedPrdId, setCopiedPrdId] = useState<number | null>(null);
+
+  // Activity Stream Filtering & Pagination State
+  const [streamTypeFilter, setStreamTypeFilter] = useState<'all' | 'triage' | 'prd' | 'standup'>('all');
+  const [streamSeverityFilter, setStreamSeverityFilter] = useState<'all' | 'P0' | 'P1' | 'P2'>('all');
+  const [streamSearch, setStreamSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   const loadData = async () => {
     setRefreshing(true);
@@ -181,6 +193,7 @@ export default function Dashboard() {
         setExpandedId(item.id);
         setInput('');
         setActiveTab('stream');
+        setCurrentPage(1);
         loadData();
       }
     } catch (err) {
@@ -219,6 +232,62 @@ export default function Dashboard() {
     setTimeout(() => setCopiedPrdId(null), 2000);
   };
 
+  // Reset to page 1 on search or filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [streamTypeFilter, streamSeverityFilter, streamSearch, pageSize]);
+
+  // Filtered Activity Stream
+  const filteredActivity = useMemo(() => {
+    return activityLog.filter((item) => {
+      // 1. Type Filter
+      if (streamTypeFilter === 'triage' && item.type !== 'REACTIVE_TRIAGE') return false;
+      if (streamTypeFilter === 'prd' && item.type !== 'FEATURE_PRD') return false;
+      if (streamTypeFilter === 'standup' && item.type !== 'PROACTIVE_DIGEST') return false;
+
+      // 2. Severity Filter (only applies to triage tickets)
+      if (streamSeverityFilter !== 'all') {
+        if (item.type === 'REACTIVE_TRIAGE') {
+          if (item.triage?.severity !== streamSeverityFilter) return false;
+        } else {
+          return false;
+        }
+      }
+
+      // 3. Search query
+      if (streamSearch.trim()) {
+        const query = streamSearch.toLowerCase();
+        const title = (item.triage?.title || item.prd?.title || 'Daily Standup Digest').toLowerCase();
+        const summary = (item.triage?.summary || item.prd?.problemStatement || item.digest || '').toLowerCase();
+        const issueNum = item.githubIssue?.issueNumber ? `#${item.githubIssue.issueNumber}` : '';
+
+        if (!title.includes(query) && !summary.includes(query) && !issueNum.includes(query)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [activityLog, streamTypeFilter, streamSeverityFilter, streamSearch]);
+
+  // Paginated Activity Stream
+  const totalPages = Math.ceil(filteredActivity.length / pageSize) || 1;
+  const paginatedActivity = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredActivity.slice(start, start + pageSize);
+  }, [filteredActivity, currentPage, pageSize]);
+
+  // Counts for filter pills
+  const counts = useMemo(() => {
+    return {
+      all: activityLog.length,
+      triage: activityLog.filter((a) => a.type === 'REACTIVE_TRIAGE').length,
+      prd: activityLog.filter((a) => a.type === 'FEATURE_PRD').length,
+      standup: activityLog.filter((a) => a.type === 'PROACTIVE_DIGEST').length,
+    };
+  }, [activityLog]);
+
+  // Presets
   const triagePresets = [
     {
       title: 'Stripe 504 Timeout',
@@ -249,10 +318,17 @@ export default function Dashboard() {
     },
   ];
 
-  const filteredIssues = openIssues.filter((i) =>
-    i.title.toLowerCase().includes(backlogSearch.toLowerCase()) ||
-    `#${i.number}`.includes(backlogSearch)
-  );
+  // Backlog Filtering
+  const filteredBacklog = openIssues.filter((i) => {
+    if (backlogFilter === 'bug' && !i.title.match(/\[P[0-3]\]/i) && !i.labels.includes('bug')) return false;
+    if (backlogFilter === 'prd' && !i.title.startsWith('[Feature Spec]') && !i.labels.includes('feature-spec')) return false;
+
+    if (backlogSearch.trim()) {
+      const q = backlogSearch.toLowerCase();
+      return i.title.toLowerCase().includes(q) || `#${i.number}`.includes(q);
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans">
@@ -402,7 +478,35 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              {openIssues.length > 3 && (
+              {/* Filter tabs for backlog */}
+              <div className="flex items-center gap-1 text-[11px] font-medium border-b border-slate-100 pb-2">
+                <button
+                  onClick={() => setBacklogFilter('all')}
+                  className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                    backlogFilter === 'all' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  All ({openIssues.length})
+                </button>
+                <button
+                  onClick={() => setBacklogFilter('bug')}
+                  className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                    backlogFilter === 'bug' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Bugs ({openIssues.filter(i => i.title.match(/\[P[0-3]\]/i) || i.labels.includes('bug')).length})
+                </button>
+                <button
+                  onClick={() => setBacklogFilter('prd')}
+                  className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                    backlogFilter === 'prd' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  PRDs ({openIssues.filter(i => i.title.startsWith('[Feature Spec]') || i.labels.includes('feature-spec')).length})
+                </button>
+              </div>
+
+              {openIssues.length > 2 && (
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                   <input
@@ -416,12 +520,12 @@ export default function Dashboard() {
               )}
 
               <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto overflow-x-hidden">
-                {filteredIssues.length === 0 ? (
+                {filteredBacklog.length === 0 ? (
                   <div className="py-6 text-center text-xs text-slate-400">
                     No matching issues in repository.
                   </div>
                 ) : (
-                  filteredIssues.map((issue) => (
+                  filteredBacklog.map((issue) => (
                     <a
                       key={issue.number}
                       href={issue.url}
@@ -439,17 +543,17 @@ export default function Dashboard() {
                       </div>
 
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {issue.labels?.includes('feature-spec') && (
+                        {(issue.labels?.includes('feature-spec') || issue.title.startsWith('[Feature Spec]')) && (
                           <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
                             PRD
                           </span>
                         )}
-                        {issue.labels?.includes('P0') && (
+                        {(issue.labels?.includes('P0') || issue.title.includes('[P0]')) && (
                           <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200">
                             P0
                           </span>
                         )}
-                        {issue.labels?.includes('P1') && (
+                        {(issue.labels?.includes('P1') || issue.title.includes('[P1]')) && (
                           <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200">
                             P1
                           </span>
@@ -493,15 +597,136 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* TAB 1: Collapsible Activity Stream */}
+            {/* TAB 1: Collapsible Activity Stream with Filtering and Pagination */}
             {activeTab === 'stream' && (
               <div className="space-y-3">
-                {activityLog.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-slate-400 text-xs">
-                    No activity records yet. Submit a bug or draft a PRD on the left to begin.
+                {/* Filter and Search Bar */}
+                <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-sm space-y-2.5">
+                  {/* Top Filter Row: Type Pills */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        onClick={() => setStreamTypeFilter('all')}
+                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition cursor-pointer border ${
+                          streamTypeFilter === 'all'
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        All ({counts.all})
+                      </button>
+
+                      <button
+                        onClick={() => setStreamTypeFilter('triage')}
+                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition cursor-pointer border flex items-center gap-1 ${
+                          streamTypeFilter === 'triage'
+                            ? 'bg-rose-700 text-white border-rose-700 shadow-xs'
+                            : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                        }`}
+                      >
+                        <AlertCircle className="w-3 h-3" />
+                        <span>Bugs & Incidents ({counts.triage})</span>
+                      </button>
+
+                      <button
+                        onClick={() => setStreamTypeFilter('prd')}
+                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition cursor-pointer border flex items-center gap-1 ${
+                          streamTypeFilter === 'prd'
+                            ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                            : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                        }`}
+                      >
+                        <FileText className="w-3 h-3" />
+                        <span>Feature PRDs ({counts.prd})</span>
+                      </button>
+
+                      {counts.standup > 0 && (
+                        <button
+                          onClick={() => setStreamTypeFilter('standup')}
+                          className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition cursor-pointer border flex items-center gap-1 ${
+                            streamTypeFilter === 'standup'
+                              ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                          }`}
+                        >
+                          <Clock className="w-3 h-3" />
+                          <span>Standups ({counts.standup})</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Severity dropdown (if viewing triage or all) */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Severity:</span>
+                      <select
+                        value={streamSeverityFilter}
+                        onChange={(e) => setStreamSeverityFilter(e.target.value as any)}
+                        className="text-[11px] font-medium bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5 text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                      >
+                        <option value="all">All</option>
+                        <option value="P0">P0 Critical</option>
+                        <option value="P1">P1 High</option>
+                        <option value="P2">P2 Standard</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Search and Page Size Row */}
+                  <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                    <div className="relative flex-1">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+                      <input
+                        type="text"
+                        value={streamSearch}
+                        onChange={(e) => setStreamSearch(e.target.value)}
+                        placeholder="Search tickets by title, summary, or #number..."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-md pl-8 pr-7 py-1 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
+                      />
+                      {streamSearch && (
+                        <button
+                          onClick={() => setStreamSearch('')}
+                          className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 text-xs text-slate-500 flex-shrink-0">
+                      <span className="text-[11px]">Per page:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => setPageSize(Number(e.target.value))}
+                        className="text-[11px] font-medium bg-slate-50 border border-slate-200 rounded-md px-1.5 py-0.5 text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                      >
+                        <option value={3}>3</option>
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stream Item List */}
+                {paginatedActivity.length === 0 ? (
+                  <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-slate-400 text-xs space-y-2">
+                    <p>No tickets match your filter criteria.</p>
+                    {(streamTypeFilter !== 'all' || streamSeverityFilter !== 'all' || streamSearch) && (
+                      <button
+                        onClick={() => {
+                          setStreamTypeFilter('all');
+                          setStreamSeverityFilter('all');
+                          setStreamSearch('');
+                        }}
+                        className="text-xs text-indigo-600 font-semibold hover:underline cursor-pointer"
+                      >
+                        Reset All Filters
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  activityLog.map((item) => {
+                  paginatedActivity.map((item) => {
                     const isExpanded = expandedId === item.id;
                     const isStandup = item.type === 'PROACTIVE_DIGEST';
                     const isPrd = item.type === 'FEATURE_PRD';
@@ -747,6 +972,52 @@ export default function Dashboard() {
                       </div>
                     );
                   })
+                )}
+
+                {/* Pagination Controls */}
+                {filteredActivity.length > pageSize && (
+                  <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-sm flex items-center justify-between text-xs text-slate-600">
+                    <span className="text-[11px]">
+                      Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{' '}
+                      <strong>{Math.min(currentPage * pageSize, filteredActivity.length)}</strong> of{' '}
+                      <strong>{filteredActivity.length}</strong> tickets
+                    </span>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="p-1.5 rounded-md border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5 text-slate-600" />
+                      </button>
+
+                      {Array.from({ length: totalPages }).map((_, idx) => {
+                        const pageNum = idx + 1;
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-7 h-7 rounded-md text-xs font-semibold transition cursor-pointer border ${
+                              currentPage === pageNum
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="p-1.5 rounded-md border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
