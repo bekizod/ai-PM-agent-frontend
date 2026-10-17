@@ -3,21 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  Lock,
   ArrowRight,
   ShieldCheck,
-  Zap,
   GitBranch,
-  Lock,
   AlertCircle,
   Sparkles,
-  Layers,
-  Radio,
-  CheckCircle2,
-  Mail,
-  Loader2
+  Loader2,
+  ExternalLink,
+  CheckCircle2
 } from 'lucide-react';
 
-const GitHubIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+const GitHubIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
     <path
       fillRule="evenodd"
@@ -29,26 +26,35 @@ const GitHubIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
 
 export default function LoginPage() {
   const router = useRouter();
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deniedUser, setDeniedUser] = useState<string | null>(null);
 
   // Check if already authenticated: logged-in persons CANNOT see /login page
   useEffect(() => {
     let isMounted = true;
+    if (typeof document !== 'undefined') {
+      const match = document.cookie.match(/(^|;)\s*tpm_auth_session=([^;]+)/);
+      if (match) {
+        try {
+          const user = JSON.parse(decodeURIComponent(match[2]));
+          if (user && user.username) {
+            router.replace('/');
+            return;
+          }
+        } catch {}
+      }
+    }
+
     fetch('/api/auth/session')
       .then((res) => res.json())
       .then((data) => {
         if (!isMounted) return;
         if (data.authenticated && data.user) {
           router.replace('/');
-        } else {
-          setCheckingAuth(false);
         }
       })
-      .catch(() => {
-        if (isMounted) setCheckingAuth(false);
-      });
+      .catch(() => {});
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -62,7 +68,7 @@ export default function LoginPage() {
     };
   }, [router]);
 
-  const handleSignIn = async () => {
+  const handleGitHubSignIn = async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/auth/demo', {
@@ -80,232 +86,250 @@ export default function LoginPage() {
     }
   };
 
-  // If verifying existing session, show sleek neon loading indicator instead of login card
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col justify-center items-center p-6 relative overflow-hidden select-none font-sans">
-        <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-gradient-to-tr from-cyan-500/30 via-teal-400/20 to-blue-600/25 rounded-full blur-[130px] pointer-events-none animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[20%] w-[500px] h-[500px] bg-gradient-to-bl from-fuchsia-500/30 via-pink-600/20 to-purple-700/25 rounded-full blur-[130px] pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-fuchsia-500 p-[1.5px] shadow-[0_0_25px_rgba(34,211,238,0.5)]">
-            <div className="w-full h-full bg-[#0a0f1d] rounded-[14px] flex items-center justify-center">
-              <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-sm font-bold text-white tracking-wide">
-              Checking Authorization Session...
-            </h2>
-            <p className="text-xs text-slate-400">
-              Verifying maintainer credentials for <span className="text-cyan-300 font-mono">@bekizod</span>
-            </p>
-          </div>
+      <div className="min-h-screen bg-[#060B26] text-white flex flex-col justify-center items-center p-6 relative select-none font-sans">
+        <div className="w-14 h-14 rounded-2xl bg-[#0075FF]/20 border border-[#0075FF]/40 flex items-center justify-center shadow-2xl shadow-[#0075FF]/40 mb-4 animate-pulse">
+          <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
         </div>
+        <h2 className="text-sm font-bold text-white tracking-wide">
+          Verifying Vision UI Session...
+        </h2>
+        <p className="text-xs text-slate-400 mt-1">
+          Redirecting maintainer <span className="text-cyan-400 font-mono">@bekizod</span>
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col justify-between items-center p-6 relative overflow-hidden select-none font-sans">
-      {/* =========================================================================
-          DYNAMIC NEON GRADIENT FOG ATMOSPHERE
-         ========================================================================= */}
-      {/* Deep Cyber Matrix Dotted Backdrop */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
-
-      {/* Primary Cyan Neon Fog Cloud (Top-Left) */}
-      <div className="absolute top-[-12%] left-[-5%] w-[680px] h-[580px] bg-gradient-to-tr from-cyan-500/40 via-teal-400/25 to-blue-600/35 rounded-full blur-[130px] pointer-events-none animate-float-slow" />
-
-      {/* Cyber Fuchsia & Hot Pink Neon Fog Cloud (Top-Right to Center) */}
-      <div className="absolute top-[10%] right-[-10%] w-[650px] h-[650px] bg-gradient-to-bl from-fuchsia-500/35 via-pink-600/30 to-purple-700/30 rounded-full blur-[140px] pointer-events-none animate-float-reverse" />
-
-      {/* Electric Ultra-Violet Deep Ambient Fog (Bottom-Center) */}
-      <div className="absolute bottom-[-18%] left-[20%] w-[750px] h-[500px] bg-gradient-to-t from-violet-600/35 via-indigo-700/25 to-transparent rounded-full blur-[140px] pointer-events-none animate-pulse-glow" />
-
-      {/* Concentrated Neon Laser Sheen (Center Halo) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[320px] bg-gradient-to-r from-cyan-500/15 via-fuchsia-500/20 to-indigo-500/15 rounded-full blur-[110px] pointer-events-none" />
-
-      {/* =========================================================================
-          TOP NAVIGATION HEADER
-         ========================================================================= */}
-      <header className="w-full max-w-5xl flex items-center justify-between text-xs z-10">
-        <div className="flex items-center gap-3">
-          {/* Logo with Neon Glow */}
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 via-indigo-500 to-fuchsia-500 p-[1.5px] shadow-[0_0_20px_rgba(34,211,238,0.5)]">
-            <div className="w-full h-full bg-[#0a0f1d] rounded-[10px] flex items-center justify-center font-mono text-xs font-bold text-white">
-              <span className="text-cyan-400">&gt;</span>_
-            </div>
+    <div className="min-h-screen bg-[#060B26] text-white flex flex-col justify-between relative overflow-hidden font-sans select-none">
+      {/* Top Floating Glass Navigation Bar (Vision UI Style from Image 3) */}
+      <header className="absolute top-6 left-6 right-6 z-30 max-w-5xl mx-auto flex items-center justify-between px-6 py-3 rounded-2xl bg-[#0F1535]/85 backdrop-blur-xl border border-white/10 shadow-2xl">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#0075FF] to-[#00E5FF] flex items-center justify-center font-mono font-bold text-xs text-white">
+            &gt;_
           </div>
-          <div>
-            <div className="font-bold text-white tracking-tight text-sm flex items-center gap-2 drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]">
-              <span>SprintOps</span>
-              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-mono tracking-wider shadow-[0_0_10px_rgba(6,182,212,0.3)]">
-                AI TPM
-              </span>
-            </div>
-          </div>
+          <span className="font-bold text-xs uppercase tracking-widest text-white">
+            VISION UI
+          </span>
+          <span className="hidden sm:inline text-[10px] text-cyan-400 font-mono">
+            / AI TPM AGENT
+          </span>
         </div>
 
-        {/* Target Repository Pill */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/80 border border-cyan-500/35 text-[11px] font-mono text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.25)] backdrop-blur-md">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.9)] animate-pulse" />
-          <GitBranch className="w-3.5 h-3.5 text-cyan-400" />
+        <div className="hidden md:flex items-center gap-6 text-[11px] font-medium text-slate-300">
+          <span className="hover:text-white cursor-pointer transition-colors">DASHBOARD</span>
+          <span className="hover:text-white cursor-pointer transition-colors">TELEMETRY</span>
+          <span className="hover:text-white cursor-pointer transition-colors">SLA AUDIT</span>
+          <span className="text-white font-bold cursor-pointer">SIGN IN</span>
+        </div>
+
+        <a
+          href="https://github.com/bekizod/ai_target_repo_name"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl vision-btn-primary text-white text-[11px] font-bold shadow-md shadow-[#0075FF]/40 cursor-pointer"
+        >
+          <GitBranch className="w-3 h-3" />
           <span>bekizod/ai_target_repo_name</span>
-        </div>
+        </a>
       </header>
 
-      {/* =========================================================================
-          MAIN NEON GLASS CARD CONTAINER
-         ========================================================================= */}
-      <main className="w-full max-w-md my-auto space-y-6 z-10">
-        {/* Error Alert if non-owner attempts to log in */}
-        {deniedUser && (
-          <div className="bg-rose-950/80 border border-rose-500/50 rounded-2xl p-4 flex items-start gap-3 text-xs text-rose-200 shadow-[0_0_35px_rgba(244,63,94,0.35)] backdrop-blur-xl animate-fade-in">
-            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5 drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]" />
-            <div className="space-y-1">
-              <span className="font-bold text-rose-300">Access Restricted: @{deniedUser}</span>
-              <p className="text-[11px] text-rose-300/90 leading-relaxed">
-                Only the repository maintainer (<strong>@bekizod</strong>) has dashboard access. Collaborator assignments &amp; tickets are dispatched directly to your registered email.
+      {/* Main Split Screen Container */}
+      <div className="flex-1 flex flex-col lg:flex-row w-full min-h-screen pt-20 lg:pt-0">
+        {/* =========================================================================
+            LEFT COLUMN: REFINED MATTE PERSPECTIVE TUNNEL (Deep, Non-Glare, Elegant)
+           ========================================================================= */}
+        <div className="lg:w-1/2 relative flex items-center justify-center p-8 lg:p-16 overflow-hidden min-h-[420px] lg:min-h-screen bg-[#070B1E]">
+          {/* Subtle Deep Cyber Ambient Vignette */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#111936] via-[#090D24] to-[#060B26]" />
+
+          {/* Elegant Matte Architectural Triangular Tunnel (Subtle, Non-Glare) */}
+          <svg
+            viewBox="0 0 600 600"
+            className="w-full max-w-[500px] h-auto relative z-10"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {/* Outer Triangle Frame */}
+            <polygon
+              points="300,50 550,510 50,510"
+              stroke="#2E3760"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
+            />
+            {/* Tier 2 Triangle */}
+            <polygon
+              points="300,120 490,470 110,470"
+              stroke="#0075FF"
+              strokeWidth="2"
+              strokeLinejoin="round"
+              strokeOpacity="0.5"
+            />
+            {/* Tier 3 Triangle */}
+            <polygon
+              points="300,190 430,430 170,430"
+              stroke="#00E5FF"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+              strokeOpacity="0.4"
+            />
+            {/* Tier 4 Triangle */}
+            <polygon
+              points="300,260 370,390 230,390"
+              stroke="#6366F1"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+              strokeOpacity="0.35"
+            />
+
+            {/* Depth Perspective Axis Rays */}
+            <line x1="300" y1="50" x2="300" y2="330" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="50" y1="510" x2="260" y2="360" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="550" y1="510" x2="340" y2="360" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+
+            {/* Subtle Horizon Node */}
+            <circle cx="300" cy="340" r="12" fill="#0075FF" fillOpacity="0.2" />
+            <circle cx="300" cy="340" r="4" fill="#00E5FF" fillOpacity="0.8" />
+          </svg>
+
+          {/* Central Typography Banner */}
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-[#060B26]/90 via-transparent to-transparent">
+            <div className="mt-48 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#00E5FF]">
+                INSPIRED BY THE FUTURE:
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                THE VISION UI DASHBOARD
+              </h1>
+              <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                Autonomous Technical Product Management, Incident Blast Radius Modeling &amp; Workload Intelligence.
               </p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Neon Gradient Fog Outer Glow Frame */}
-        <div className="relative group">
-          {/* Neon Gradient Aura Frame */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 via-indigo-500 via-fuchsia-500 to-cyan-400 rounded-3xl blur-lg opacity-70 group-hover:opacity-100 transition duration-700 animate-pulse-glow" />
-
-          {/* Inner Frosted Glassmorphism Card */}
-          <div className="relative bg-[#090d1a]/85 backdrop-blur-2xl border border-white/15 rounded-2xl p-7 shadow-[0_0_50px_rgba(0,0,0,0.8)] space-y-6">
-            {/* Top Luminous Neon Horizon Line */}
-            <div className="absolute top-0 left-8 right-8 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-fuchsia-400 to-transparent shadow-[0_0_15px_rgba(34,211,238,0.9)]" />
-
-            {/* Header / Title */}
-            <div className="space-y-2 text-center pt-1">
-              <h1 className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-slate-200 drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
-                Maintainer Authorization
-              </h1>
-              <p className="text-xs text-slate-300/80 leading-relaxed max-w-xs mx-auto">
-                Sign in to manage sprint velocity, triage P0 incidents, and orchestrate automated GitHub workflows.
+        {/* =========================================================================
+            RIGHT COLUMN: PURE GITHUB AUTHENTICATION (No fake email/password)
+           ========================================================================= */}
+        <div className="lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-20 relative z-20">
+          <div className="w-full max-w-md space-y-6">
+            {/* Header Greeting */}
+            <div className="space-y-1.5">
+              <h2 className="text-3xl font-black text-white tracking-tight">
+                Nice to see you!
+              </h2>
+              <p className="text-xs text-slate-400">
+                Sign in with your verified GitHub account to access the TPM automation dashboard.
               </p>
             </div>
 
-            {/* Glowing Neon Sign-In Action Button */}
-            <div className="space-y-3 pt-1">
-              <button
-                type="button"
-                onClick={handleSignIn}
-                disabled={loading}
-                id="owner-neon-login-btn"
-                className="w-full relative overflow-hidden rounded-xl p-[1.5px] cursor-pointer group disabled:opacity-50 transition-all hover:scale-[1.01] active:scale-[0.99]"
-              >
-                {/* Button Outer Neon Gradient Ring */}
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-indigo-500 rounded-xl blur-xs group-hover:blur-sm transition-all" />
+            {/* Error Banner if Non-Owner attempts login */}
+            {deniedUser && (
+              <div className="p-4 rounded-2xl bg-rose-950/80 border border-rose-500/50 flex items-start gap-3 text-xs text-rose-200 backdrop-blur-xl animate-fade-in shadow-xl">
+                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold text-rose-300">Access Restricted: @{deniedUser}</span>
+                  <p className="text-[11px] text-rose-300/90 leading-relaxed">
+                    Only repository owner (<strong>@bekizod</strong>) has dashboard login authority. Assigned issues and PRDs are dispatched directly to your inbox.
+                  </p>
+                </div>
+              </div>
+            )}
 
-                {/* Button Inner Content */}
-                <div className="relative flex items-center justify-between p-3.5 rounded-xl bg-gradient-to-r from-[#0b1222] to-[#131b32] group-hover:from-[#0e172c] group-hover:to-[#17213e] border border-cyan-400/40 transition-all shadow-[0_0_25px_rgba(6,182,212,0.35)]">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <img
-                        src="https://avatars.githubusercontent.com/u/121251335?v=4"
-                        alt="bekizod"
-                        className="w-10 h-10 rounded-full ring-2 ring-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.7)] object-cover"
-                      />
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-[#0b1222] shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse" />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <span>Sign In as @bekizod</span>
-                        <span className="text-[9px] font-bold bg-cyan-500/25 text-cyan-300 border border-cyan-400/50 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(6,182,212,0.4)]">
-                          Owner
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-400 font-normal">
-                        Launch TPM Automation Dashboard
-                      </div>
-                    </div>
+            {/* Owner Authority Card */}
+            <div className="p-4 rounded-2xl bg-[#0F1535] border border-white/10 shadow-xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <img
+                    src="https://avatars.githubusercontent.com/u/121251335?v=4"
+                    alt="bekizod"
+                    className="w-12 h-12 rounded-2xl border-2 border-[#0075FF] object-cover"
+                  />
+                  <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-[#0F1535]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-white">@bekizod</span>
+                    <span className="text-[9px] font-bold bg-[#0075FF]/20 text-cyan-300 border border-[#0075FF]/40 px-1.5 py-0.2 rounded">
+                      Repository Owner
+                    </span>
                   </div>
-
-                  <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center group-hover:bg-cyan-500/35 group-hover:border-cyan-300 transition-all shadow-[0_0_12px_rgba(34,211,238,0.35)]">
-                    <ArrowRight className="w-4 h-4 text-cyan-300 group-hover:translate-x-0.5 transition-transform" />
+                  <div className="text-[11px] text-slate-400 font-mono">
+                    Owner of bekizod/ai_target_repo_name
                   </div>
                 </div>
+              </div>
+
+              {/* Security Pill */}
+              <div className="p-3 rounded-xl bg-[#060B26]/80 border border-white/5 flex items-center justify-between text-xs">
+                <span className="text-slate-400 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Single-Owner Console Access</span>
+                </span>
+                <span className="text-emerald-400 font-bold font-mono text-[11px]">Enforced</span>
+              </div>
+
+              {/* Primary GitHub Sign-In Button */}
+              <button
+                type="button"
+                onClick={handleGitHubSignIn}
+                disabled={loading}
+                id="vision-github-sign-in-btn"
+                className="w-full py-3.5 rounded-2xl vision-btn-primary text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2.5 transition-transform active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-lg shadow-[#0075FF]/30"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>AUTHENTICATING OWNER...</span>
+                  </>
+                ) : (
+                  <>
+                    <GitHubIcon className="w-5 h-5 text-white" />
+                    <span>Continue with GitHub</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
 
-            {/* Neon Feature Capabilities Matrix */}
-            <div className="pt-3 border-t border-slate-800/80 space-y-2.5">
+            {/* Automation Capabilities Strip */}
+            <div className="space-y-2 pt-1 text-xs">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                <span>Automated Capabilities</span>
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Active Automated Capabilities</span>
               </div>
 
-              <div className="space-y-2 text-[11px] text-slate-300 font-medium">
-                {/* Capability 1 */}
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/70 border border-cyan-500/20 hover:border-cyan-500/50 transition-all shadow-[0_0_15px_rgba(6,182,212,0.08)]">
-                  <div className="w-6 h-6 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0">
-                    <Zap className="w-3.5 h-3.5 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
-                  </div>
-                  <span>Autonomous P0 Triage &amp; Blast Radius Analysis</span>
+              <div className="space-y-2 text-[11px] text-slate-300">
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Autonomous P0 Incident Triage &amp; Blast Radius Analysis</span>
                 </div>
-
-                {/* Capability 2 */}
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/70 border border-indigo-500/20 hover:border-indigo-500/50 transition-all shadow-[0_0_15px_rgba(99,102,241,0.08)]">
-                  <div className="w-6 h-6 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
-                    <Layers className="w-3.5 h-3.5 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.9)]" />
-                  </div>
-                  <span>Team Workload Balancer &amp; GitHub Collaborator Invites</span>
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Workload Balancer &amp; Direct Collaborator Invites</span>
                 </div>
-
-                {/* Capability 3 */}
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/70 border border-fuchsia-500/20 hover:border-fuchsia-500/50 transition-all shadow-[0_0_15px_rgba(217,70,239,0.08)]">
-                  <div className="w-6 h-6 rounded-lg bg-fuchsia-500/20 border border-fuchsia-500/30 flex items-center justify-center shrink-0">
-                    <Radio className="w-3.5 h-3.5 text-fuchsia-400 drop-shadow-[0_0_8px_rgba(232,121,249,0.9)]" />
-                  </div>
-                  <span>Nodemailer SMTP Real-Time Task Delivery &amp; GitHub Sync</span>
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Automated Gmail SMTP Task Assignment Dispatch</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Security Access Badge */}
-        <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400 font-medium">
-          <Lock className="w-3.5 h-3.5 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
-          <span>Single-Owner Protected Console</span>
-          <span className="text-slate-600">&bull;</span>
-          <span className="text-slate-400">Team tasks routed via Email</span>
+      {/* Footer (Matching Image 3) */}
+      <footer className="w-full py-4 px-6 flex flex-wrap items-center justify-between gap-4 text-[11px] text-slate-400 border-t border-white/5 relative z-30">
+        <div>
+          @ 2026, Made with <span className="text-rose-500">❤️</span> by{' '}
+          <strong className="text-white">SprintOps &amp; Vision UI</strong> for a better web
         </div>
-      </main>
-
-      {/* =========================================================================
-          CLEAN NEON ACCENTED FOOTER
-         ========================================================================= */}
-      <footer className="w-full max-w-5xl flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400 z-10 pt-4 border-t border-slate-900/80">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse" />
-          <span className="text-slate-300">SprintOps AI &bull; Octokit GitHub REST API &amp; Gmail SMTP Active</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <a
-            href="https://github.com/bekizod/ai_target_repo_name"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-cyan-300 flex items-center gap-1.5 transition-colors"
-          >
-            <GitHubIcon className="w-3 h-3 text-slate-400 hover:text-cyan-300" />
-            <span>Repository Backlog</span>
-          </a>
-          <span>&bull;</span>
-          <span className="text-cyan-400 font-mono">v1.2 Production</span>
+        <div className="flex items-center gap-6">
+          <span className="hover:text-white cursor-pointer">Marketplace</span>
+          <span className="hover:text-white cursor-pointer">Blog</span>
+          <span className="hover:text-white cursor-pointer">License</span>
         </div>
       </footer>
     </div>
