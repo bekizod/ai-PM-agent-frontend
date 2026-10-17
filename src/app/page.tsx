@@ -413,7 +413,7 @@ export default function Dashboard() {
   const [assigningIssueNum, setAssigningIssueNum] = useState<number | null>(null);
   const [assignmentFeedback, setAssignmentFeedback] = useState<string | null>(null);
 
-  // Authenticated User State
+  // Authenticated User State & Guard
   const [currentUser, setCurrentUser] = useState<{
     username: string;
     name: string;
@@ -421,21 +421,29 @@ export default function Dashboard() {
     email: string;
     role: 'TPM_LEAD' | 'ENGINEER';
   } | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Check Authentication Session on Mount
   useEffect(() => {
+    let isMounted = true;
     fetch('/api/auth/session')
       .then((res) => res.json())
       .then((data) => {
+        if (!isMounted) return;
         if (data.authenticated && data.user) {
           setCurrentUser(data.user);
+          setAuthLoading(false);
         } else {
           window.location.href = '/login';
         }
       })
       .catch(() => {
-        window.location.href = '/login';
+        if (isMounted) window.location.href = '/login';
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -1199,6 +1207,35 @@ export default function Dashboard() {
   }, [openIssues, backlogFilter, backlogSearch]);
 
   const latestStandup = activityLog.find((item) => item.type === 'PROACTIVE_DIGEST');
+
+  // Guard Dashboard: Unauthenticated users CANNOT see dashboard UI
+  if (authLoading || !currentUser) {
+    return (
+      <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col items-center justify-center p-6 relative overflow-hidden select-none font-sans">
+        <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-gradient-to-tr from-cyan-500/25 via-teal-400/20 to-blue-600/20 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[20%] w-[500px] h-[500px] bg-gradient-to-bl from-fuchsia-500/25 via-pink-600/20 to-purple-700/20 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-fuchsia-500 p-[1.5px] shadow-[0_0_25px_rgba(34,211,238,0.5)]">
+            <div className="w-full h-full bg-[#0a0f1d] rounded-[14px] flex items-center justify-center">
+              <Lock className="w-5 h-5 text-cyan-400 animate-pulse" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-sm font-bold text-white tracking-wide">
+              Verifying Maintainer Authorization...
+            </h2>
+            <p className="text-xs text-slate-400">
+              Securing access for repository owner <span className="text-cyan-300 font-mono">@bekizod</span>
+            </p>
+          </div>
+          <div className="w-36 h-1 bg-slate-800 rounded-full overflow-hidden mt-1">
+            <div className="w-full h-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-fuchsia-500 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans antialiased flex flex-col selection:bg-indigo-100 selection:text-indigo-900">
