@@ -334,6 +334,53 @@ function StandupMarkdown({ text }: { text: string }) {
   );
 }
 
+
+const triageBoilerplates = [
+  {
+    label: '🚨 P0 Stripe Webhook 504 Timeout',
+    description: 'Critical Outage • Multi-tenant billing downgraded to Free tier',
+    text: 'Production Outage: Stripe payment renewal webhook returning 504 Gateway Timeout for enterprise customer accounts with >500 transactions. Customers are getting downgraded to Free tier erroneously, losing access to SSO and audit logs. Error logs: "TransactionTimeoutError: Knex: Timeout acquiring a connection from pool after 10000ms in BillingTenantWorker".',
+  },
+  {
+    label: '🔥 P0 Redis Cluster Split-Brain',
+    description: 'Fatal Cache Down • User auth session loops & 500s',
+    text: 'Critical Incident: Redis cluster experiencing split-brain across us-east-1 and us-west-2 availability zones. Tenant cache reads failing with "CLUSTERDOWN The cluster is down". All active user sessions are encountering authentication loops and HTTP 500 on /api/v1/user/me.',
+  },
+  {
+    label: '⚠️ P1 PostgreSQL Pool Exhaustion',
+    description: 'Database connection pool leak under heavy batch tax jobs',
+    text: 'Database connection pool exhaustion detected on production read-replicas. Telemetry shows active connections pegged at 100% capacity (pool_size=50) whenever background quarterly CSV tax reports run. Query latency spiked from 12ms to 4,800ms.',
+  },
+  {
+    label: '⚡ P2 GraphQL N+1 Latency Spike',
+    description: 'High latency on Org Members dashboard listing endpoint',
+    text: 'Performance degradation on Organization Members dashboard. GraphQL query for listOrgMembers triggers N+1 database lookups for user permissions and role scopes, causing 3,200ms TTFB for teams with over 200 members.',
+  },
+];
+
+const prdBoilerplates = [
+  {
+    label: '🔐 Enterprise SAML 2.0 & Okta SSO',
+    description: 'Identity & Access Management • SCIM Provisioning & Audit',
+    text: 'Build an Enterprise Single Sign-On (SSO) integration supporting SAML 2.0, Okta, Azure AD, and Google Workspace with automated SCIM 2.0 user provisioning and deprovisioning, role-based session enforcement, and SOC2 audit logging.',
+  },
+  {
+    label: '📡 Webhook Delivery & Replay Engine',
+    description: 'Reliable developer webhooks • HMAC signatures & 72h jitter replay',
+    text: 'Design an Automated Webhook Delivery and Replay Engine for third-party developer integrations. Must support HMAC-SHA256 signature verification, exponential backoff retries with jitter up to 72 hours, and a self-service developer replay dashboard.',
+  },
+  {
+    label: '🛡️ Distributed Token-Bucket Rate Limiter',
+    description: 'High throughput traffic management • Multi-tier sliding window',
+    text: 'Implement a multi-region distributed API rate limiter using Redis token bucket algorithm with sliding-window tiers for Free, Pro, and Enterprise tiers. Must handle 50,000 req/sec with sub-5ms overhead and graceful fallback under Redis degradation.',
+  },
+  {
+    label: '📜 Immutable SOC2 Compliance Audit Vault',
+    description: 'Tamper-proof compliance logging • SHA-256 evidence chain',
+    text: 'Create an immutable audit log storage service for enterprise compliance (SOC2 Type II, HIPAA). All administrative mutations, permission changes, and data exports must be cryptographically hashed (SHA-256) and archived to write-once WORM cloud storage.',
+  },
+];
+
 export default function Dashboard() {
   const [input, setInput] = useState('');
   const [intakeMode, setIntakeMode] = useState<'triage' | 'prd'>('triage');
@@ -1155,101 +1202,112 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans antialiased flex flex-col selection:bg-indigo-100 selection:text-indigo-900">
-      {/* Top Staff-Grade Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
+      {/* Top Professional Engineering Header (Linear/Vercel Aesthetic) */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+          {/* Brand & Repository Context */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-xs">
-              <Sparkles className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold shadow-xs">
+              <span className="text-indigo-400 mr-0.5">&gt;</span>_
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-900 text-sm tracking-tight">Autonomous AI Technical PM</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">
-                  Staff SRE Edition
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-900 text-sm tracking-tight">SprintOps</span>
+              <span className="text-slate-300">/</span>
+              <a
+                href="https://github.com/bekizod/ai_target_repo_name"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/70 border border-slate-200/60 transition-colors"
+                title="View target repository on GitHub"
+              >
+                <GitBranch className="w-3 h-3 text-slate-400" />
+                <span>bekizod/ai_target_repo_name</span>
+              </a>
             </div>
           </div>
 
+          {/* Unified Tooling Actions */}
           <div className="flex items-center gap-2">
-            {/* Ask TPM Copilot Button */}
+            {/* Ask Copilot */}
             <button
+              type="button"
               onClick={() => setShowCopilotDrawer(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition cursor-pointer border border-emerald-200 shadow-xs"
-              title="Open Interactive TPM Copilot Chat"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200/80 transition-colors cursor-pointer shadow-2xs"
+              title="Open TPM Copilot assistant"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden sm:inline">Ask TPM Copilot</span>
+              <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">Copilot</span>
             </button>
 
-            {/* Multi-Agent DAG Trace Button */}
+            {/* Agent Traces */}
             <button
+              type="button"
               onClick={() => setShowDagTraceModal(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 transition cursor-pointer border border-purple-200 shadow-xs"
-              title="Inspect Multi-Agent Execution DAG"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200/80 transition-colors cursor-pointer shadow-2xs"
+              title="Inspect multi-agent trace DAG"
             >
-              <Zap className="w-3.5 h-3.5 text-purple-600" />
-              <span className="hidden sm:inline">Agent DAG Trace</span>
+              <Layers className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden md:inline">Traces</span>
             </button>
 
-            {/* Sprint Release Notes Button */}
+            {/* Release Notes */}
             <button
+              type="button"
               onClick={handleOpenReleaseNotesModal}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition cursor-pointer border border-indigo-200 shadow-xs"
-              title="Generate Sprint Release Notes & GitHub Release Draft"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200/80 transition-colors cursor-pointer shadow-2xs"
+              title="Generate sprint release notes"
             >
-              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-              <span className="hidden sm:inline">Release Notes</span>
+              <FileCode className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden md:inline">Release Notes</span>
             </button>
 
-            {/* Inbound Webhooks Button */}
+            {/* Webhook Simulator */}
             <button
+              type="button"
               onClick={() => setShowWebhookModal(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer border border-slate-200 shadow-xs"
-              title="Trigger Sentry / Datadog Webhook Simulation"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200/80 transition-colors cursor-pointer shadow-2xs"
+              title="Simulate incoming webhooks"
             >
-              <Radio className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
-              <span className="hidden md:inline">Webhook Listener</span>
+              <Radio className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden lg:inline">Webhooks</span>
             </button>
 
-            {/* Standup Trigger Button */}
+            {/* Standup Trigger - Primary Action */}
             <button
+              type="button"
               onClick={handleStandup}
               disabled={runningStandup}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white transition cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white transition-all cursor-pointer shadow-xs"
+              title="Run daily sprint standup digest"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${runningStandup ? 'animate-spin' : ''}`} />
-              <span>{runningStandup ? 'Synthesizing...' : 'Run Standup Digest'}</span>
+              <span>{runningStandup ? 'Synthesizing...' : 'Run Standup'}</span>
             </button>
 
+            {/* Data Refresh */}
             <button
+              type="button"
               onClick={loadData}
               disabled={refreshing}
-              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition cursor-pointer"
-              title="Refresh All Real GitHub Issues"
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              title="Refresh repository issues"
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
 
-            {/* Authenticated User Profile & Logout */}
+            {/* Authenticated Owner Profile */}
             {currentUser && (
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+              <div className="flex items-center gap-2 pl-2.5 ml-1 border-l border-slate-200">
                 <div className="flex items-center gap-2">
                   <img
                     src={currentUser.avatarUrl || 'https://avatars.githubusercontent.com/u/121251335?v=4'}
                     alt={currentUser.name}
                     className="w-7 h-7 rounded-full border border-slate-200 object-cover"
                   />
-                  <div className="hidden lg:block text-left">
-                    <div className="text-[11px] font-bold text-slate-900 leading-tight">
-                      @{currentUser.username}
-                    </div>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${currentUser.role === 'TPM_LEAD'
-                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      }`}>
-                      {currentUser.role === 'TPM_LEAD' ? 'TPM Lead' : 'Engineer'}
+                  <div className="hidden lg:flex items-center gap-1.5">
+                    <span className="text-xs font-medium text-slate-800 font-mono">@{currentUser.username}</span>
+                    <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded">
+                      Owner
                     </span>
                   </div>
                 </div>
@@ -1257,7 +1315,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                   title="Sign out of workspace"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -2429,6 +2487,57 @@ export default function Dashboard() {
                   ? 'Runs Multi-Agent Pipeline + Deduplication + Blast Radius'
                   : 'Synthesizes User Stories + Architecture + Success Metrics'}
               </span>
+            </div>
+
+            {/* Quick Boilerplate Templates for Fast Testing */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Quick Templates for Fast Testing (Click to pre-fill):</span>
+                </span>
+                {input && (
+                  <button
+                    type="button"
+                    onClick={() => setInput('')}
+                    className="text-[10px] text-slate-400 hover:text-slate-600 cursor-pointer underline"
+                  >
+                    Clear Input
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {intakeMode === 'triage' ? (
+                  <>
+                    {triageBoilerplates.map((t, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setInput(t.text)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-slate-100/80 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200/80 hover:border-indigo-200 transition-colors cursor-pointer shadow-2xs"
+                        title={t.description}
+                      >
+                        <span>{t.label}</span>
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {prdBoilerplates.map((t, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setInput(t.text)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-slate-100/80 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200/80 hover:border-indigo-200 transition-colors cursor-pointer shadow-2xs"
+                        title={t.description}
+                      >
+                        <span>{t.label}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="relative">
