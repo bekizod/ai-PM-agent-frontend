@@ -1,5 +1,12 @@
 'use client';
 
+const GitHubIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+  </svg>
+);
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -45,7 +52,8 @@ import {
   Users,
   ShieldCheck,
   Lock,
-  MessageCircle
+  MessageCircle,
+  LogOut,
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/agent';
@@ -357,6 +365,39 @@ export default function Dashboard() {
   const [rebalancingWorkload, setRebalancingWorkload] = useState(false);
   const [assigningIssueNum, setAssigningIssueNum] = useState<number | null>(null);
   const [assignmentFeedback, setAssignmentFeedback] = useState<string | null>(null);
+
+  // Authenticated User State
+  const [currentUser, setCurrentUser] = useState<{
+    username: string;
+    name: string;
+    avatarUrl: string;
+    email: string;
+    role: 'TPM_LEAD' | 'ENGINEER';
+  } | null>(null);
+
+  // Check Authentication Session on Mount
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.user) {
+          setCurrentUser(data.user);
+        } else {
+          window.location.href = '/login';
+        }
+      })
+      .catch(() => {
+        window.location.href = '/login';
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      window.location.href = '/login';
+    }
+  };
 
   const [loadingCapacity, setLoadingCapacity] = useState(false);
 
@@ -788,7 +829,7 @@ export default function Dashboard() {
   };
 
 
-  
+
   const loadCapacity = async () => {
     try {
       const res = await fetch(`${API_BASE}/team/capacity`);
@@ -801,7 +842,7 @@ export default function Dashboard() {
     }
   };
 
-  
+
   // Handler: Add Real Team Member
   const handleAddRealMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -821,6 +862,15 @@ export default function Dashboard() {
         }),
       });
       if (res.ok) {
+        const data = await res.json();
+        const inviteText = data.gitHubInviteResult?.success
+          ? ` 🚀 Official GitHub collaborator invite sent to @${newMemberGithub}!`
+          : '';
+        const emailText = data.emailResult?.sent
+          ? ` 📧 Welcome email dispatched to ${data.emailResult.recipient}!`
+          : '';
+        setAssignmentFeedback(`✓ Added ${newMemberName} to sprint team!${inviteText}${emailText}`);
+        setTimeout(() => setAssignmentFeedback(null), 8000);
         setShowAddMemberModal(false);
         setNewMemberName('');
         setNewMemberRole('');
@@ -1181,6 +1231,39 @@ export default function Dashboard() {
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
+
+            {/* Authenticated User Profile & Logout */}
+            {currentUser && (
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                <div className="flex items-center gap-2">
+                  <img
+                    src={currentUser.avatarUrl || 'https://avatars.githubusercontent.com/u/121251335?v=4'}
+                    alt={currentUser.name}
+                    className="w-7 h-7 rounded-full border border-slate-200 object-cover"
+                  />
+                  <div className="hidden lg:block text-left">
+                    <div className="text-[11px] font-bold text-slate-900 leading-tight">
+                      @{currentUser.username}
+                    </div>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${currentUser.role === 'TPM_LEAD'
+                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      }`}>
+                      {currentUser.role === 'TPM_LEAD' ? 'TPM Lead' : 'Engineer'}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                  title="Sign out of workspace"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -1310,8 +1393,8 @@ export default function Dashboard() {
                       <button
                         onClick={() => setActiveCodeTab('diff')}
                         className={`pb-2 px-1 text-xs font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${activeCodeTab === 'diff'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                          ? 'border-indigo-600 text-indigo-600'
+                          : 'border-transparent text-slate-500 hover:text-slate-700'
                           }`}
                       >
                         <GitBranch className="w-3.5 h-3.5" />
@@ -1320,8 +1403,8 @@ export default function Dashboard() {
                       <button
                         onClick={() => setActiveCodeTab('test')}
                         className={`pb-2 px-1 text-xs font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${activeCodeTab === 'test'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                          ? 'border-indigo-600 text-indigo-600'
+                          : 'border-transparent text-slate-500 hover:text-slate-700'
                           }`}
                       >
                         <FileCode className="w-3.5 h-3.5" />
@@ -1539,9 +1622,9 @@ export default function Dashboard() {
                               {event.time}
                             </span>
                             <span className={`text-[10px] font-bold px-2 py-0.2 rounded ${event.phase === 'Detection' ? 'bg-amber-100 text-amber-800' :
-                                event.phase === 'Escalation' ? 'bg-rose-100 text-rose-800' :
-                                  event.phase === 'Mitigation' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-emerald-100 text-emerald-800'
+                              event.phase === 'Escalation' ? 'bg-rose-100 text-rose-800' :
+                                event.phase === 'Mitigation' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-emerald-100 text-emerald-800'
                               }`}>
                               {event.phase}
                             </span>
@@ -1957,25 +2040,22 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
                     <button
                       onClick={() => setActiveCommsTab('exec')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
-                        activeCommsTab === 'exec' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${activeCommsTab === 'exec' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
                     >
                       👔 Executive Briefing (CEO/VP)
                     </button>
                     <button
                       onClick={() => setActiveCommsTab('customer')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
-                        activeCommsTab === 'customer' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${activeCommsTab === 'customer' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
                     >
                       ✉️ Enterprise Customer Email
                     </button>
                     <button
                       onClick={() => setActiveCommsTab('statuspage')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
-                        activeCommsTab === 'statuspage' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${activeCommsTab === 'statuspage' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
                     >
                       🌐 Public StatusPage Broadcast
                     </button>
@@ -2088,9 +2168,8 @@ export default function Dashboard() {
                               <span className="font-mono font-bold text-[10px] text-slate-500 bg-slate-100 px-1 rounded">{finding.id}</span>
                               <span className="font-semibold text-slate-900">{finding.standard} Audit Check</span>
                             </div>
-                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                              finding.severity === 'Passed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                            }`}>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${finding.severity === 'Passed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                              }`}>
                               {finding.severity}
                             </span>
                           </div>
@@ -2115,7 +2194,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      
+
       {/* MODAL 9: Add Real Team Member */}
       {showAddMemberModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
@@ -2131,6 +2210,15 @@ export default function Dashboard() {
             </div>
 
             <form onSubmit={handleAddRealMember} className="space-y-3 text-xs">
+              <div className="bg-indigo-50/80 border border-indigo-200 rounded-lg p-2.5 text-[11px] text-indigo-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-indigo-950">
+                  <Zap className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>Direct Dashboard Onboarding:</span>
+                </div>
+                <p className="leading-relaxed">
+                  No need to open GitHub manually! Entering their GitHub username here sends an official GitHub Collaborator invite via API and notifies them via email.
+                </p>
+              </div>
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Full Name</label>
                 <input
@@ -2245,11 +2333,10 @@ export default function Dashboard() {
               {copilotChatMessages.map((msg, i) => (
                 <div key={i} className={`flex flex-col space-y-1.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div
-                    className={`p-3.5 rounded-2xl max-w-[88%] leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-indigo-600 text-white rounded-br-xs shadow-xs'
-                        : 'bg-slate-100 text-slate-800 rounded-bl-xs border border-slate-200/80 shadow-2xs'
-                    }`}
+                    className={`p-3.5 rounded-2xl max-w-[88%] leading-relaxed ${msg.role === 'user'
+                      ? 'bg-indigo-600 text-white rounded-br-xs shadow-xs'
+                      : 'bg-slate-100 text-slate-800 rounded-bl-xs border border-slate-200/80 shadow-2xs'
+                      }`}
                   >
                     <StandupMarkdown text={msg.content} />
                   </div>
@@ -2319,8 +2406,8 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setIntakeMode('triage')}
                   className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${intakeMode === 'triage'
-                      ? 'bg-white text-slate-900 shadow-2xs'
-                      : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-800'
                     }`}
                 >
                   Bug Triage & Multi-Agent Analysis
@@ -2329,8 +2416,8 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setIntakeMode('prd')}
                   className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${intakeMode === 'prd'
-                      ? 'bg-white text-slate-900 shadow-2xs'
-                      : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-800'
                     }`}
                 >
                   Enterprise Feature PRD
@@ -2409,8 +2496,8 @@ export default function Dashboard() {
                     key={mode}
                     onClick={() => setBacklogFilter(mode)}
                     className={`text-[10px] font-semibold px-2 py-0.5 rounded capitalize transition cursor-pointer ${backlogFilter === mode
-                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                        : 'text-slate-500 hover:bg-slate-100'
+                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                      : 'text-slate-500 hover:bg-slate-100'
                       }`}
                   >
                     {mode === 'all' ? 'All' : mode === 'bug' ? 'Bugs' : 'PRDs'}
@@ -2438,12 +2525,12 @@ export default function Dashboard() {
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span
                             className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${isP0
-                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                : isP1
-                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                  : isPrd
-                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                                    : 'bg-slate-100 text-slate-700'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : isP1
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : isPrd
+                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                  : 'bg-slate-100 text-slate-700'
                               }`}
                           >
                             {isP0 ? 'P0' : isP1 ? 'P1' : isPrd ? 'Epic' : 'P2'}
@@ -2487,8 +2574,8 @@ export default function Dashboard() {
                 <button
                   onClick={() => setActiveTab('stream')}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'stream'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
@@ -2498,8 +2585,8 @@ export default function Dashboard() {
                 <button
                   onClick={() => setActiveTab('standup')}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'standup'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
                   <Calendar className="w-3.5 h-3.5" />
@@ -2509,8 +2596,8 @@ export default function Dashboard() {
                 <button
                   onClick={() => setActiveTab('analytics')}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'analytics'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
                   <BarChart3 className="w-3.5 h-3.5" />
@@ -2520,8 +2607,8 @@ export default function Dashboard() {
                 <button
                   onClick={() => { setActiveTab('capacity'); if (!teamCapacity) { loadCapacity(); } }}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'capacity'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
                   <Users className="w-3.5 h-3.5" />
@@ -2650,10 +2737,10 @@ export default function Dashboard() {
                             ) : (
                               <span
                                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${item.triage?.severity === 'P0'
-                                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                    : item.triage?.severity === 'P1'
-                                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                      : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                  : item.triage?.severity === 'P1'
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    : 'bg-slate-100 text-slate-700 border border-slate-200'
                                   }`}
                               >
                                 {item.triage?.severity || 'P2'}
@@ -2885,8 +2972,8 @@ export default function Dashboard() {
                                     onClick={() => handleToggleIssueState(item)}
                                     disabled={togglingStateNum === item.githubIssue.issueNumber}
                                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded font-medium text-[11px] transition cursor-pointer border ${isClosed
-                                        ? 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-                                        : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                                      ? 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                                      : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
                                       }`}
                                   >
                                     {isClosed ? (
@@ -3135,12 +3222,12 @@ export default function Dashboard() {
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-semibold text-slate-800">{comp.name}</span>
                             <span className={`text-[10px] font-bold px-2 py-0.2 rounded ${comp.riskLevel === 'Critical'
-                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                : comp.riskLevel === 'High'
-                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                  : comp.riskLevel === 'Medium'
-                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                    : 'bg-slate-100 text-slate-600'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : comp.riskLevel === 'High'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : comp.riskLevel === 'Medium'
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                  : 'bg-slate-100 text-slate-600'
                               }`}>
                               {comp.riskLevel} Risk ({comp.riskScore}/100)
                             </span>
@@ -3148,12 +3235,12 @@ export default function Dashboard() {
                           <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all ${comp.riskLevel === 'Critical'
-                                  ? 'bg-rose-600'
-                                  : comp.riskLevel === 'High'
-                                    ? 'bg-amber-500'
-                                    : comp.riskLevel === 'Medium'
-                                      ? 'bg-blue-500'
-                                      : 'bg-emerald-500'
+                                ? 'bg-rose-600'
+                                : comp.riskLevel === 'High'
+                                  ? 'bg-amber-500'
+                                  : comp.riskLevel === 'Medium'
+                                    ? 'bg-blue-500'
+                                    : 'bg-emerald-500'
                                 }`}
                               style={{ width: `${comp.riskScore}%` }}
                             />
@@ -3289,9 +3376,8 @@ export default function Dashboard() {
                                     className="w-11 h-11 rounded-full border-2 border-indigo-100 object-cover shadow-2xs"
                                   />
                                 ) : (
-                                  <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-xs text-white ${
-                                    member.isOverloaded ? 'bg-rose-600' : 'bg-indigo-600'
-                                  }`}>
+                                  <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-xs text-white ${member.isOverloaded ? 'bg-rose-600' : 'bg-indigo-600'
+                                    }`}>
                                     {(member.name || 'TM').slice(0, 2).toUpperCase()}
                                   </div>
                                 )}
@@ -3318,13 +3404,12 @@ export default function Dashboard() {
                             </div>
 
                             <div className="flex items-center gap-1.5">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                member.isOverloaded
-                                  ? 'bg-rose-100 text-rose-800 border-rose-200'
-                                  : member.capacityPercentage > 80
-                                    ? 'bg-amber-100 text-amber-800 border-amber-200'
-                                    : 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                              }`}>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${member.isOverloaded
+                                ? 'bg-rose-100 text-rose-800 border-rose-200'
+                                : member.capacityPercentage > 80
+                                  ? 'bg-amber-100 text-amber-800 border-amber-200'
+                                  : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                }`}>
                                 {member.isOverloaded ? 'OVERLOADED' : 'HEALTHY'} ({member.capacityPercentage}%)
                               </span>
 
@@ -3350,13 +3435,12 @@ export default function Dashboard() {
                             </div>
                             <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all ${
-                                  member.isOverloaded
-                                    ? 'bg-rose-600'
-                                    : member.capacityPercentage > 80
-                                      ? 'bg-amber-500'
-                                      : 'bg-emerald-500'
-                                }`}
+                                className={`h-full rounded-full transition-all ${member.isOverloaded
+                                  ? 'bg-rose-600'
+                                  : member.capacityPercentage > 80
+                                    ? 'bg-amber-500'
+                                    : 'bg-emerald-500'
+                                  }`}
                                 style={{ width: `${Math.min(100, member.capacityPercentage)}%` }}
                               />
                             </div>
