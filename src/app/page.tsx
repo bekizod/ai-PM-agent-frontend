@@ -21,7 +21,31 @@ import {
   Copy,
   Sparkles,
   Filter,
-  X
+  X,
+  Radio,
+  Wrench,
+  CheckCircle2,
+  XCircle,
+  MessageSquare,
+  Terminal,
+  BarChart3,
+  Code2,
+  ShieldAlert,
+  TrendingDown,
+  Layers,
+  GitBranch,
+  FileCode,
+  AlertTriangle,
+  ArrowRight,
+  Zap,
+  Target,
+  Flame,
+  GitMerge,
+  BookOpen,
+  Users,
+  ShieldCheck,
+  Lock,
+  MessageCircle
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/agent';
@@ -35,6 +59,39 @@ interface TriageResult {
   labels: string[];
   requiresUrgentMeeting: boolean;
   suggestedMeetingTopic?: string;
+}
+
+interface BlastRadiusAssessment {
+  affectedServices: string[];
+  blastRadiusScore: 'Low' | 'Medium' | 'High' | 'Critical';
+  customerExposurePercentage: number;
+  dataIntegrityRisk: boolean;
+  architecturalComponents: string[];
+}
+
+interface ReliabilityRiskMetrics {
+  deploymentRiskScore: number;
+  slaBreachProbability: 'Low (<10%)' | 'Moderate (10-40%)' | 'High (40-75%)' | 'Critical (>75%)';
+  estimatedMttrHours: number;
+  canaryRolloutRecommended: boolean;
+  mitigationRunbook: string[];
+}
+
+interface DeduplicationMatch {
+  isDuplicate: boolean;
+  similarityScore: number;
+  matchedIssueNumber?: number;
+  matchedIssueTitle?: string;
+  rationale?: string;
+}
+
+interface CodeFixAndTestScaffold {
+  reproductionTestCode: string;
+  testFramework: 'Jest' | 'Mocha' | 'PyTest' | 'GoTest';
+  proposedFixDiff: string;
+  filesToModify: string[];
+  technicalTradeoffs: string;
+  commitMessage: string;
 }
 
 interface UserStory {
@@ -57,12 +114,122 @@ interface PrdResult {
   markdownPrd: string;
 }
 
+export interface IncidentTimelineEvent {
+  time: string;
+  phase: 'Detection' | 'Escalation' | 'Mitigation' | 'Resolution';
+  description: string;
+  actor: string;
+}
+
+export interface PostMortemReport {
+  title: string;
+  incidentSeverity: 'P0 - Critical Outage' | 'P1 - Major Impairment';
+  status: 'Published' | 'Action Items In-Flight';
+  executiveSummary: string;
+  impact: {
+    downtimeMinutes: number;
+    affectedCustomers: string;
+    financialExposure: string;
+    dataLoss: string;
+  };
+  timeline: IncidentTimelineEvent[];
+  fiveWhys: Array<{ level: number; why: string; finding: string }>;
+  rootCause: string;
+  triggerEvent: string;
+  mitigationSteps: string[];
+  actionItems: Array<{
+    id: string;
+    action: string;
+    owner: string;
+    priority: 'P0' | 'P1' | 'P2';
+    dueDate: string;
+  }>;
+  markdownReport: string;
+}
+
+export interface SprintReleaseNotes {
+  version: string;
+  releaseDate: string;
+  releaseTitle: string;
+  executiveSummary: string;
+  highlights: string[];
+  categories: {
+    features: Array<{ title: string; issueNumber?: number; summary: string }>;
+    fixes: Array<{ title: string; issueNumber?: number; severity: string; summary: string }>;
+    reliability: Array<{ title: string; summary: string }>;
+    security: Array<{ title: string; summary: string }>;
+  };
+  markdownChangelog: string;
+}
+
+
+export interface OutageCommunications {
+  executiveBriefing: string;
+  customerEmail: {
+    subject: string;
+    body: string;
+  };
+  statusPageNotice: {
+    title: string;
+    status: 'Investigating' | 'Identified' | 'Monitoring' | 'Resolved';
+    body: string;
+  };
+}
+
+export interface TeamMemberCapacity {
+  name: string;
+  role: string;
+  avatar: string;
+  assignedIssuesCount: number;
+  storyPoints: number;
+  maxCapacityPoints: number;
+  capacityPercentage: number;
+  isOverloaded: boolean;
+  primaryComponent: string;
+}
+
+export interface TeamCapacityPlan {
+  totalSprintPoints: number;
+  teamUtilizationPercentage: number;
+  members: TeamMemberCapacity[];
+  rebalanceRecommendations: string[];
+}
+
+export interface ComplianceAuditFinding {
+  id: string;
+  standard: 'SOC2' | 'GDPR' | 'OWASP' | 'Data Privacy';
+  severity: 'Critical' | 'Warning' | 'Passed';
+  description: string;
+  remediation: string;
+}
+
+export interface SecurityComplianceReport {
+  overallStatus: 'SOC2 Compliant' | 'Warning: Action Required' | 'High Risk';
+  score: number;
+  findings: ComplianceAuditFinding[];
+  summary: string;
+}
+
 interface ActivityItem {
   id: number;
   timestamp: string;
-  type?: 'REACTIVE_TRIAGE' | 'PROACTIVE_DIGEST' | 'FEATURE_PRD' | string;
+  type?: 'REACTIVE_TRIAGE' | 'PROACTIVE_DIGEST' | 'FEATURE_PRD' | 'WEBHOOK_INCIDENT' | string;
+  webhookSource?: string;
+  state?: 'open' | 'closed';
   triage?: TriageResult;
   prd?: PrdResult;
+  blastRadius?: BlastRadiusAssessment;
+  reliabilityRisk?: ReliabilityRiskMetrics;
+  deduplication?: DeduplicationMatch;
+  codeScaffold?: CodeFixAndTestScaffold;
+  pullRequest?: {
+    prNumber: number;
+    prUrl: string;
+    branchName: string;
+    state: string;
+    issueNumber: number;
+  };
+  postMortem?: PostMortemReport;
   githubIssue?: {
     issueNumber: number;
     issueUrl: string;
@@ -86,6 +253,33 @@ interface GitHubIssueSummary {
   title: string;
   labels: string[];
   url: string;
+  state?: string;
+}
+
+interface AnalyticsData {
+  kpis: {
+    mttdMinutes: number;
+    mttrHours: number;
+    slaComplianceRate: number;
+    criticalDefectRatio: number;
+    totalTracked: number;
+    p0Count: number;
+    p1Count: number;
+    prdCount: number;
+    resolvedCount: number;
+  };
+  components: Array<{
+    name: string;
+    activeIssues: number;
+    riskScore: number;
+    riskLevel: string;
+    mttr: string;
+  }>;
+  burndown: Array<{
+    day: string;
+    ideal: number;
+    actual: number;
+  }>;
 }
 
 function cleanMarkdown(raw: string): string {
@@ -140,14 +334,108 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [activityLog, setActivityLog] = useState<ActivityItem[]>([]);
   const [openIssues, setOpenIssues] = useState<GitHubIssueSummary[]>([]);
-  const [activeTab, setActiveTab] = useState<'stream' | 'standup'>('stream');
+  const [activeTab, setActiveTab] = useState<'stream' | 'standup' | 'analytics' | 'capacity'>('stream');
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [backlogSearch, setBacklogSearch] = useState('');
   const [backlogFilter, setBacklogFilter] = useState<'all' | 'bug' | 'prd'>('all');
   const [copiedPrdId, setCopiedPrdId] = useState<number | null>(null);
 
-  // Activity Stream Filtering & Pagination State
-  const [streamTypeFilter, setStreamTypeFilter] = useState<'all' | 'triage' | 'prd' | 'standup'>('all');
+  // Analytics State
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  // 1. Team Capacity State
+  const [teamCapacity, setTeamCapacity] = useState<any | null>(null);
+
+  // Dynamic Team Management State
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberRole, setNewMemberRole] = useState('');
+  const [newMemberGithub, setNewMemberGithub] = useState('');
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberCapacity, setNewMemberCapacity] = useState(15);
+  const [newMemberComponent, setNewMemberComponent] = useState('Core Services');
+  const [savingMember, setSavingMember] = useState(false);
+  const [rebalancingWorkload, setRebalancingWorkload] = useState(false);
+  const [assigningIssueNum, setAssigningIssueNum] = useState<number | null>(null);
+  const [assignmentFeedback, setAssignmentFeedback] = useState<string | null>(null);
+
+  const [loadingCapacity, setLoadingCapacity] = useState(false);
+
+  // 2. Outage Comms Modal State
+  const [outageCommsItem, setOutageCommsItem] = useState<ActivityItem | null>(null);
+  const [generatingOutageComms, setGeneratingOutageComms] = useState(false);
+  const [activeOutageComms, setActiveOutageComms] = useState<OutageCommunications | null>(null);
+  const [activeCommsTab, setActiveCommsTab] = useState<'exec' | 'customer' | 'statuspage'>('exec');
+  const [dispatchingExecEmail, setDispatchingExecEmail] = useState(false);
+  const [dispatchedExecEmailSuccess, setDispatchedExecEmailSuccess] = useState(false);
+  const [copiedCommsType, setCopiedCommsType] = useState<string | null>(null);
+
+  // 3. Security & SOC2 Compliance Modal State
+  const [complianceModalItem, setComplianceModalItem] = useState<ActivityItem | null>(null);
+  const [generatingCompliance, setGeneratingCompliance] = useState(false);
+  const [activeComplianceReport, setActiveComplianceReport] = useState<SecurityComplianceReport | null>(null);
+
+  // 4. Copilot Chat Drawer State
+  const [showCopilotDrawer, setShowCopilotDrawer] = useState(false);
+  const [copilotInput, setCopilotInput] = useState('');
+  const [copilotChatMessages, setCopilotChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; followUps?: string[] }>>([
+    {
+      role: 'assistant',
+      content: '👋 Hi @bekizod! I am your Autonomous Technical Product Manager Copilot. I have live real-time visibility into your GitHub repository backlog, active P0 blockers, and sprint burndown. Ask me anything or click one of the quick prompts below.',
+      followUps: [
+        'What are our highest P0 risks today?',
+        'Are we on track for sprint delivery?',
+        'Draft an executive incident email to leadership',
+      ],
+    },
+  ]);
+  const [askingCopilot, setAskingCopilot] = useState(false);
+
+
+  // Issue Action States
+  const [planningIssueNum, setPlanningIssueNum] = useState<number | null>(null);
+  const [plannedSuccessNum, setPlannedSuccessNum] = useState<number | null>(null);
+  const [togglingStateNum, setTogglingStateNum] = useState<number | null>(null);
+
+  // Code Fix & Test Modal State
+  const [codeFixModalItem, setCodeFixModalItem] = useState<ActivityItem | null>(null);
+  const [generatingCodeFix, setGeneratingCodeFix] = useState(false);
+  const [activeCodeFixScaffold, setActiveCodeFixScaffold] = useState<CodeFixAndTestScaffold | null>(null);
+  const [activeCodeTab, setActiveCodeTab] = useState<'test' | 'diff'>('diff');
+  const [postingDiffToGithub, setPostingDiffToGithub] = useState(false);
+  const [postedDiffSuccess, setPostedDiffSuccess] = useState(false);
+  const [copiedCodeType, setCopiedCodeType] = useState<string | null>(null);
+
+  // Autonomous Git PR State
+  const [creatingAutonomousPr, setCreatingAutonomousPr] = useState(false);
+  const [createdPrResult, setCreatedPrResult] = useState<any | null>(null);
+
+  // Incident War Room & Post-Mortem Modal State
+  const [warRoomModalItem, setWarRoomModalItem] = useState<ActivityItem | null>(null);
+  const [generatingPostMortem, setGeneratingPostMortem] = useState(false);
+  const [activePostMortem, setActivePostMortem] = useState<PostMortemReport | null>(null);
+  const [publishingPostMortem, setPublishingPostMortem] = useState(false);
+  const [publishedPostMortemSuccess, setPublishedPostMortemSuccess] = useState(false);
+  const [copiedPostMortem, setCopiedPostMortem] = useState(false);
+
+  // Sprint Release Notes Modal State
+  const [showReleaseNotesModal, setShowReleaseNotesModal] = useState(false);
+  const [generatingReleaseNotes, setGeneratingReleaseNotes] = useState(false);
+  const [activeReleaseNotes, setActiveReleaseNotes] = useState<SprintReleaseNotes | null>(null);
+  const [releaseVersionInput, setReleaseVersionInput] = useState('1.4.0');
+  const [publishingReleaseDraft, setPublishingReleaseDraft] = useState(false);
+  const [publishedReleaseDraftResult, setPublishedReleaseDraftResult] = useState<any | null>(null);
+  const [copiedReleaseNotes, setCopiedReleaseNotes] = useState(false);
+
+  // Multi-Agent DAG Trace Modal State
+  const [showDagTraceModal, setShowDagTraceModal] = useState(false);
+
+  // Webhook Modal State
+  const [showWebhookModal, setShowWebhookModal] = useState(false);
+  const [simulatingWebhook, setSimulatingWebhook] = useState(false);
+  const [webhookTestMessage, setWebhookTestMessage] = useState('');
+
+  // Filtering & Pagination
+  const [streamTypeFilter, setStreamTypeFilter] = useState<'all' | 'triage' | 'prd' | 'webhook' | 'standup'>('all');
   const [streamSeverityFilter, setStreamSeverityFilter] = useState<'all' | 'P0' | 'P1' | 'P2'>('all');
   const [streamSearch, setStreamSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -156,14 +444,28 @@ export default function Dashboard() {
   const loadData = async () => {
     setRefreshing(true);
     try {
-      const res = await fetch(`${API_BASE}/status`);
-      if (res.ok) {
-        const data = await res.json();
+      const [resStatus, resAnalytics, resCapacity] = await Promise.all([
+        fetch(`${API_BASE}/status`),
+        fetch(`${API_BASE}/analytics`),
+        fetch(`${API_BASE}/team/capacity`),
+      ]);
+
+      if (resStatus.ok) {
+        const data = await resStatus.json();
         setActivityLog(data.activityLog || []);
         setOpenIssues(data.openIssues || []);
         if (data.activityLog && data.activityLog.length > 0 && expandedId === null) {
           setExpandedId(data.activityLog[0].id);
         }
+      }
+
+      if (resAnalytics.ok) {
+        const analyticsData = await resAnalytics.json();
+        setAnalytics(analyticsData);
+      }
+      if (resCapacity && resCapacity.ok) {
+        const capData = await resCapacity.json();
+        setTeamCapacity(capData.capacityPlan);
       }
     } catch (err) {
       console.warn('Backend unavailable:', err);
@@ -224,44 +526,548 @@ export default function Dashboard() {
     }
   };
 
-  const handleCopyPrd = (item: ActivityItem) => {
-    if (!item.prd) return;
-    const prdText = item.prd.markdownPrd || `# PRD: ${item.prd.title}\n\n## Problem Statement\n${item.prd.problemStatement}\n\n## Target Audience\n${item.prd.targetAudience}\n\n## Estimated Effort\n${item.prd.estimatedEffort}`;
-    navigator.clipboard.writeText(prdText);
-    setCopiedPrdId(item.id);
+  // Issue Action 1: Generate AI Plan & Post Comment on GitHub
+  const handleGeneratePlan = async (item: ActivityItem) => {
+    const issueNum = item.githubIssue?.issueNumber;
+    if (!issueNum || planningIssueNum === issueNum) return;
+
+    setPlanningIssueNum(issueNum);
+    try {
+      const title = item.triage?.title || item.prd?.title || `Issue #${issueNum}`;
+      const body = item.triage?.summary || item.prd?.problemStatement || '';
+
+      const res = await fetch(`${API_BASE}/issues/${issueNum}/plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body }),
+      });
+
+      if (res.ok) {
+        setPlannedSuccessNum(issueNum);
+        setTimeout(() => setPlannedSuccessNum(null), 4000);
+      }
+    } catch (err) {
+      console.error('Failed to post plan:', err);
+    } finally {
+      setPlanningIssueNum(null);
+    }
+  };
+
+  // Issue Action 2: Open Code Fix & Test Modal
+  const handleOpenCodeFixModal = async (item: ActivityItem) => {
+    setCodeFixModalItem(item);
+    setActiveCodeTab('diff');
+    setPostedDiffSuccess(false);
+    setCreatedPrResult(item.pullRequest || null);
+
+    if (item.codeScaffold) {
+      setActiveCodeFixScaffold(item.codeScaffold);
+    } else {
+      setGeneratingCodeFix(true);
+      try {
+        const issueNum = item.githubIssue?.issueNumber || item.id;
+        const title = item.triage?.title || item.prd?.title || `Issue #${issueNum}`;
+        const body = item.triage?.summary || item.prd?.problemStatement || '';
+
+        const res = await fetch(`${API_BASE}/issues/${issueNum}/code-fix`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, body, postToGitHub: false }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setActiveCodeFixScaffold(data.scaffold);
+        }
+      } catch (err) {
+        console.error('Failed to generate code scaffold:', err);
+      } finally {
+        setGeneratingCodeFix(false);
+      }
+    }
+  };
+
+  // Issue Action 3: Post Diff to GitHub Comment
+  const handlePostDiffToGitHub = async () => {
+    if (!codeFixModalItem?.githubIssue?.issueNumber || postingDiffToGithub) return;
+    const issueNum = codeFixModalItem.githubIssue.issueNumber;
+    setPostingDiffToGithub(true);
+    try {
+      const title = codeFixModalItem.triage?.title || codeFixModalItem.prd?.title || `Issue #${issueNum}`;
+      const body = codeFixModalItem.triage?.summary || codeFixModalItem.prd?.problemStatement || '';
+
+      const res = await fetch(`${API_BASE}/issues/${issueNum}/code-fix`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, postToGitHub: true }),
+      });
+
+      if (res.ok) {
+        setPostedDiffSuccess(true);
+      }
+    } catch (err) {
+      console.error('Failed to post diff to GitHub:', err);
+    } finally {
+      setPostingDiffToGithub(false);
+    }
+  };
+
+  // Issue Action 3b: Autonomous Git Pull Request Creator via Octokit
+  const handleCreateAutonomousPr = async () => {
+    if (!codeFixModalItem?.githubIssue?.issueNumber || creatingAutonomousPr || !activeCodeFixScaffold) return;
+    const issueNum = codeFixModalItem.githubIssue.issueNumber;
+    setCreatingAutonomousPr(true);
+    try {
+      const title = codeFixModalItem.triage?.title || codeFixModalItem.prd?.title || `Issue #${issueNum}`;
+      const body = codeFixModalItem.triage?.summary || codeFixModalItem.prd?.problemStatement || '';
+
+      const res = await fetch(`${API_BASE}/issues/${issueNum}/pull-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          body,
+          patchContent: activeCodeFixScaffold.proposedFixDiff,
+          testScaffold: activeCodeFixScaffold.reproductionTestCode,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setCreatedPrResult(data.pullRequest);
+        // update item in activityLog
+        setActivityLog((prev) =>
+          prev.map((a) =>
+            a.githubIssue?.issueNumber === issueNum ? { ...a, pullRequest: data.pullRequest } : a
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Failed to create autonomous pull request:', err);
+    } finally {
+      setCreatingAutonomousPr(false);
+    }
+  };
+
+  // Issue Action 4: Close / Reopen Issue on GitHub
+  const handleToggleIssueState = async (item: ActivityItem) => {
+    const issueNum = item.githubIssue?.issueNumber;
+    if (!issueNum || togglingStateNum === issueNum) return;
+
+    const targetState = item.state === 'closed' ? 'open' : 'closed';
+    setTogglingStateNum(issueNum);
+    try {
+      const res = await fetch(`${API_BASE}/issues/${issueNum}/state`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: targetState }),
+      });
+
+      if (res.ok) {
+        setActivityLog((prev) =>
+          prev.map((a) => (a.githubIssue?.issueNumber === issueNum ? { ...a, state: targetState } : a))
+        );
+        loadData();
+      }
+    } catch (err) {
+      console.error('Failed to toggle state:', err);
+    } finally {
+      setTogglingStateNum(null);
+    }
+  };
+
+  // Issue Action 5: Open Incident War Room & Blameless Post-Mortem Modal
+  const handleOpenWarRoomModal = async (item: ActivityItem) => {
+    setWarRoomModalItem(item);
+    setPublishedPostMortemSuccess(false);
+
+    if (item.postMortem) {
+      setActivePostMortem(item.postMortem);
+    } else {
+      setGeneratingPostMortem(true);
+      try {
+        const issueNum = item.githubIssue?.issueNumber || item.id;
+        const title = item.triage?.title || item.prd?.title || `Issue #${issueNum}`;
+        const body = item.triage?.summary || item.prd?.problemStatement || '';
+        const severity = item.triage?.severity || 'P0';
+
+        const res = await fetch(`${API_BASE}/issues/${issueNum}/post-mortem`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, body, severity, publishToGitHub: false }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setActivePostMortem(data.postMortem);
+          setActivityLog((prev) =>
+            prev.map((a) =>
+              a.githubIssue?.issueNumber === issueNum ? { ...a, postMortem: data.postMortem } : a
+            )
+          );
+        }
+      } catch (err) {
+        console.error('Failed to generate post-mortem:', err);
+      } finally {
+        setGeneratingPostMortem(false);
+      }
+    }
+  };
+
+  const handlePublishPostMortemToGitHub = async () => {
+    if (!warRoomModalItem?.githubIssue?.issueNumber || publishingPostMortem || !activePostMortem) return;
+    const issueNum = warRoomModalItem.githubIssue.issueNumber;
+    setPublishingPostMortem(true);
+    try {
+      const title = warRoomModalItem.triage?.title || `Issue #${issueNum}`;
+      const body = warRoomModalItem.triage?.summary || '';
+      const severity = warRoomModalItem.triage?.severity || 'P0';
+
+      const res = await fetch(`${API_BASE}/issues/${issueNum}/post-mortem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, severity, publishToGitHub: true }),
+      });
+
+      if (res.ok) {
+        setPublishedPostMortemSuccess(true);
+      }
+    } catch (err) {
+      console.error('Failed to publish post-mortem to GitHub:', err);
+    } finally {
+      setPublishingPostMortem(false);
+    }
+  };
+
+  // Issue Action 6: Open Sprint Release Notes Modal
+  const handleOpenReleaseNotesModal = async () => {
+    setShowReleaseNotesModal(true);
+    setPublishedReleaseDraftResult(null);
+    if (!activeReleaseNotes) {
+      await fetchSprintReleaseNotes(releaseVersionInput);
+    }
+  };
+
+  const fetchSprintReleaseNotes = async (ver: string) => {
+    setGeneratingReleaseNotes(true);
+    try {
+      const res = await fetch(`${API_BASE}/release-notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: ver, publishToGitHub: false }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveReleaseNotes(data.releaseNotes);
+      }
+    } catch (err) {
+      console.error('Failed to generate release notes:', err);
+    } finally {
+      setGeneratingReleaseNotes(false);
+    }
+  };
+
+  const handlePublishReleaseDraft = async () => {
+    if (publishingReleaseDraft || !activeReleaseNotes) return;
+    setPublishingReleaseDraft(true);
+    try {
+      const res = await fetch(`${API_BASE}/release-notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: activeReleaseNotes.version, publishToGitHub: true }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPublishedReleaseDraftResult(data.gitHubRelease);
+      }
+    } catch (err) {
+      console.error('Failed to publish release draft:', err);
+    } finally {
+      setPublishingReleaseDraft(false);
+    }
+  };
+
+
+  
+  const loadCapacity = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/team/capacity`);
+      if (res.ok) {
+        const data = await res.json();
+        setTeamCapacity(data.capacityPlan);
+      }
+    } catch (err) {
+      console.error('Failed to load capacity:', err);
+    }
+  };
+
+  
+  // Handler: Add Real Team Member
+  const handleAddRealMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMemberName.trim() || savingMember) return;
+    setSavingMember(true);
+    try {
+      const res = await fetch(`${API_BASE}/team/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newMemberName,
+          role: newMemberRole || 'Software Engineer',
+          githubUsername: newMemberGithub,
+          email: newMemberEmail,
+          maxCapacityPoints: Number(newMemberCapacity) || 15,
+          primaryComponent: newMemberComponent,
+        }),
+      });
+      if (res.ok) {
+        setShowAddMemberModal(false);
+        setNewMemberName('');
+        setNewMemberRole('');
+        setNewMemberGithub('');
+        setNewMemberEmail('');
+        loadCapacity();
+      }
+    } catch (err) {
+      console.error('Failed to add team member:', err);
+    } finally {
+      setSavingMember(false);
+    }
+  };
+
+  // Handler: Delete Team Member
+  const handleDeleteMember = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/team/members/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadCapacity();
+      }
+    } catch (err) {
+      console.error('Failed to delete member:', err);
+    }
+  };
+
+  // Handler: Assign Issue to Member
+  const handleAssignIssue = async (issueNumber: number, memberId: string) => {
+    setAssigningIssueNum(issueNumber);
+    try {
+      const res = await fetch(`${API_BASE}/issues/${issueNumber}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId, syncToGitHub: true }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const emailMsg = data.emailResult?.sent
+          ? ` 📧 Real email dispatched to ${data.emailResult.recipient}!`
+          : '';
+        setAssignmentFeedback(`✓ Issue #${issueNumber} assigned to ${data.assignedTo?.name || 'engineer'}.${emailMsg}`);
+        setTimeout(() => setAssignmentFeedback(null), 7000);
+        loadCapacity();
+        loadData();
+      }
+    } catch (err) {
+      console.error('Failed to assign issue:', err);
+    } finally {
+      setAssigningIssueNum(null);
+    }
+  };
+
+  // Handler: Auto-Rebalance Workload
+  const handleAutoRebalance = async () => {
+    if (rebalancingWorkload) return;
+    setRebalancingWorkload(true);
+    try {
+      const res = await fetch(`${API_BASE}/team/rebalance`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setTeamCapacity(data.updatedCapacity.capacityPlan);
+        loadData();
+      }
+    } catch (err) {
+      console.error('Failed to auto-rebalance:', err);
+    } finally {
+      setRebalancingWorkload(false);
+    }
+  };
+
+  // Handler: Open Outage Comms Modal
+  const handleOpenOutageComms = async (item: ActivityItem) => {
+    setOutageCommsItem(item);
+    setActiveCommsTab('exec');
+    setDispatchedExecEmailSuccess(false);
+    setGeneratingOutageComms(true);
+    try {
+      const issueNum = item.githubIssue?.issueNumber || item.id;
+      const title = item.triage?.title || item.prd?.title || `Issue #${issueNum}`;
+      const body = item.triage?.summary || item.prd?.problemStatement || '';
+      const severity = item.triage?.severity || 'P0';
+
+      const res = await fetch(`${API_BASE}/issues/${issueNum}/outage-comms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, severity, dispatchEmail: false }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveOutageComms(data.communications);
+      }
+    } catch (err) {
+      console.error('Failed to generate outage comms:', err);
+    } finally {
+      setGeneratingOutageComms(false);
+    }
+  };
+
+  const handleDispatchExecEmail = async () => {
+    if (!outageCommsItem || dispatchingExecEmail) return;
+    setDispatchingExecEmail(true);
+    try {
+      const issueNum = outageCommsItem.githubIssue?.issueNumber || outageCommsItem.id;
+      const title = outageCommsItem.triage?.title || outageCommsItem.prd?.title || `Issue #${issueNum}`;
+      const body = outageCommsItem.triage?.summary || outageCommsItem.prd?.problemStatement || '';
+      const severity = outageCommsItem.triage?.severity || 'P0';
+
+      const res = await fetch(`${API_BASE}/issues/${issueNum}/outage-comms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, severity, dispatchEmail: true }),
+      });
+      if (res.ok) {
+        setDispatchedExecEmailSuccess(true);
+      }
+    } catch (err) {
+      console.error('Failed to dispatch exec email:', err);
+    } finally {
+      setDispatchingExecEmail(false);
+    }
+  };
+
+  // Handler: Open Security & Compliance Audit Modal
+  const handleOpenComplianceModal = async (item: ActivityItem) => {
+    setComplianceModalItem(item);
+    setGeneratingCompliance(true);
+    try {
+      const issueNum = item.githubIssue?.issueNumber || item.id;
+      const title = item.triage?.title || item.prd?.title || `Issue #${issueNum}`;
+      const body = item.triage?.summary || item.prd?.problemStatement || item.prd?.markdownPrd || '';
+
+      const res = await fetch(`${API_BASE}/issues/${issueNum}/compliance-audit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveComplianceReport(data.report);
+      }
+    } catch (err) {
+      console.error('Failed to run compliance audit:', err);
+    } finally {
+      setGeneratingCompliance(false);
+    }
+  };
+
+  // Handler: Ask Copilot
+  const handleSendCopilotMessage = async (overridePrompt?: string) => {
+    const promptToSend = overridePrompt || copilotInput;
+    if (!promptToSend.trim() || askingCopilot) return;
+
+    setCopilotChatMessages((prev) => [...prev, { role: 'user', content: promptToSend }]);
+    setCopilotInput('');
+    setAskingCopilot(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/copilot/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptToSend }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setCopilotChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: data.reply, followUps: data.suggestedFollowUps },
+        ]);
+      }
+    } catch (err) {
+      console.error('Failed to query copilot:', err);
+      setCopilotChatMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: 'Apologies, I encountered a connection issue querying the sprint copilot service.' },
+      ]);
+    } finally {
+      setAskingCopilot(false);
+    }
+  };
+
+  // Webhook Simulator
+  const handleSimulateWebhook = async (preset?: string) => {
+    setSimulatingWebhook(true);
+    const payload =
+      preset ||
+      webhookTestMessage ||
+      'Sentry Alert: Critical Database Deadlock on Transaction Commit in billing service.';
+    try {
+      const res = await fetch(`${API_BASE}/webhook/incident`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: 'Sentry Inbound Webhook',
+          payload: { message: payload },
+        }),
+      });
+
+      if (res.ok) {
+        const item = await res.json();
+        setActivityLog((prev) => [item, ...prev]);
+        setExpandedId(item.id);
+        setShowWebhookModal(false);
+        setWebhookTestMessage('');
+        setActiveTab('stream');
+        loadData();
+      }
+    } catch (err) {
+      console.error('Webhook simulation failed:', err);
+    } finally {
+      setSimulatingWebhook(false);
+    }
+  };
+
+  const copyToClipboard = (text: string, id: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedPrdId(id);
     setTimeout(() => setCopiedPrdId(null), 2000);
   };
 
-  // Reset to page 1 on search or filter change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [streamTypeFilter, streamSeverityFilter, streamSearch, pageSize]);
+  const copyCodeScaffold = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCodeType(type);
+    setTimeout(() => setCopiedCodeType(null), 2000);
+  };
 
   // Filtered Activity Stream
   const filteredActivity = useMemo(() => {
     return activityLog.filter((item) => {
-      // 1. Type Filter
+      // Type Filter
       if (streamTypeFilter === 'triage' && item.type !== 'REACTIVE_TRIAGE') return false;
       if (streamTypeFilter === 'prd' && item.type !== 'FEATURE_PRD') return false;
+      if (streamTypeFilter === 'webhook' && item.type !== 'WEBHOOK_INCIDENT') return false;
       if (streamTypeFilter === 'standup' && item.type !== 'PROACTIVE_DIGEST') return false;
 
-      // 2. Severity Filter (only applies to triage tickets)
+      // Severity Filter
       if (streamSeverityFilter !== 'all') {
-        if (item.type === 'REACTIVE_TRIAGE') {
-          if (item.triage?.severity !== streamSeverityFilter) return false;
-        } else {
-          return false;
-        }
+        const sev = item.triage?.severity;
+        if (sev !== streamSeverityFilter) return false;
       }
 
-      // 3. Search query
+      // Keyword Search
       if (streamSearch.trim()) {
-        const query = streamSearch.toLowerCase();
-        const title = (item.triage?.title || item.prd?.title || 'Daily Standup Digest').toLowerCase();
-        const summary = (item.triage?.summary || item.prd?.problemStatement || item.digest || '').toLowerCase();
-        const issueNum = item.githubIssue?.issueNumber ? `#${item.githubIssue.issueNumber}` : '';
-
-        if (!title.includes(query) && !summary.includes(query) && !issueNum.includes(query)) {
+        const q = streamSearch.toLowerCase();
+        const title = item.triage?.title || item.prd?.title || item.digest || '';
+        const summary = item.triage?.summary || item.prd?.problemStatement || '';
+        if (!title.toLowerCase().includes(q) && !summary.toLowerCase().includes(q)) {
           return false;
         }
       }
@@ -270,471 +1076,1562 @@ export default function Dashboard() {
     });
   }, [activityLog, streamTypeFilter, streamSeverityFilter, streamSearch]);
 
-  // Paginated Activity Stream
-  const totalPages = Math.ceil(filteredActivity.length / pageSize) || 1;
+  const totalPages = Math.max(1, Math.ceil(filteredActivity.length / pageSize));
   const paginatedActivity = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredActivity.slice(start, start + pageSize);
   }, [filteredActivity, currentPage, pageSize]);
 
-  // Counts for filter pills
-  const counts = useMemo(() => {
-    return {
-      all: activityLog.length,
-      triage: activityLog.filter((a) => a.type === 'REACTIVE_TRIAGE').length,
-      prd: activityLog.filter((a) => a.type === 'FEATURE_PRD').length,
-      standup: activityLog.filter((a) => a.type === 'PROACTIVE_DIGEST').length,
-    };
-  }, [activityLog]);
-
-  // Presets
-  const triagePresets = [
-    {
-      title: 'Stripe 504 Timeout',
-      text: 'Production Outage: Stripe payment webhook returning 504 Gateway Timeout on enterprise renewals. Paying customers are being falsely downgraded to Free tier and losing access.',
-    },
-    {
-      title: 'CSV Heap Overflow',
-      text: 'Customer Incident: When generating the quarterly CSV tax billing report for accounts with more than 10,000 transactions, the backend Node worker crashes with JavaScript heap out of memory error 500.',
-    },
-    {
-      title: 'Timezone Toggle',
-      text: 'Feature Request: The global EMEA operations team requested that analytics and reporting charts allow toggling between UTC and local tenant timezones.',
-    },
-  ];
-
-  const prdPresets = [
-    {
-      title: 'Enterprise SAML/Okta SSO',
-      text: 'Enterprise single sign-on (SSO) via SAML 2.0 and Okta integration with automated user provisioning via SCIM and SOC2 audit logging.',
-    },
-    {
-      title: 'Webhook Replay Engine',
-      text: 'Automated webhook delivery replay engine with exponential backoff, dead-letter queuing, and customer self-service debugging dashboard.',
-    },
-    {
-      title: 'Granular Team RBAC',
-      text: 'Custom team role-based access control (RBAC) matrix allowing workspace admins to define granular read/write permissions per project and billing module.',
-    },
-  ];
-
   // Backlog Filtering
-  const filteredBacklog = openIssues.filter((i) => {
-    if (backlogFilter === 'bug' && !i.title.match(/\[P[0-3]\]/i) && !i.labels.includes('bug')) return false;
-    if (backlogFilter === 'prd' && !i.title.startsWith('[Feature Spec]') && !i.labels.includes('feature-spec')) return false;
+  const filteredBacklog = useMemo(() => {
+    return openIssues.filter((issue) => {
+      const isPrd = issue.title.startsWith('[Feature Spec]') || (issue.labels || []).includes('feature-spec');
+      if (backlogFilter === 'bug' && isPrd) return false;
+      if (backlogFilter === 'prd' && !isPrd) return false;
 
-    if (backlogSearch.trim()) {
-      const q = backlogSearch.toLowerCase();
-      return i.title.toLowerCase().includes(q) || `#${i.number}`.includes(q);
-    }
-    return true;
-  });
+      if (backlogSearch.trim()) {
+        const q = backlogSearch.toLowerCase();
+        return (
+          issue.title.toLowerCase().includes(q) ||
+          issue.number.toString().includes(q) ||
+          (issue.labels || []).some((l) => l.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [openIssues, backlogFilter, backlogSearch]);
+
+  const latestStandup = activityLog.find((item) => item.type === 'PROACTIVE_DIGEST');
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans">
-      {/* Top Navbar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans antialiased flex flex-col selection:bg-indigo-100 selection:text-indigo-900">
+      {/* Top Staff-Grade Navigation Bar */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-7 rounded bg-slate-900 text-white flex items-center justify-center font-bold text-xs tracking-tight shadow-sm">
-              TPM
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-xs">
+              <Sparkles className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-slate-900 tracking-tight">SprintOps Console</span>
-              <span className="text-slate-300">/</span>
-              <span className="text-xs text-slate-500 font-medium">B2B SaaS</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900 text-sm tracking-tight">Autonomous AI Technical PM</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">
+                  Staff SRE Edition
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              bekizod/ai_target_repo_name
-            </div>
+          <div className="flex items-center gap-2">
+            {/* Ask TPM Copilot Button */}
+            <button
+              onClick={() => setShowCopilotDrawer(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition cursor-pointer border border-emerald-200 shadow-xs"
+              title="Open Interactive TPM Copilot Chat"
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">Ask TPM Copilot</span>
+            </button>
 
+            {/* Multi-Agent DAG Trace Button */}
+            <button
+              onClick={() => setShowDagTraceModal(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 transition cursor-pointer border border-purple-200 shadow-xs"
+              title="Inspect Multi-Agent Execution DAG"
+            >
+              <Zap className="w-3.5 h-3.5 text-purple-600" />
+              <span className="hidden sm:inline">Agent DAG Trace</span>
+            </button>
+
+            {/* Sprint Release Notes Button */}
+            <button
+              onClick={handleOpenReleaseNotesModal}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition cursor-pointer border border-indigo-200 shadow-xs"
+              title="Generate Sprint Release Notes & GitHub Release Draft"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="hidden sm:inline">Release Notes</span>
+            </button>
+
+            {/* Inbound Webhooks Button */}
+            <button
+              onClick={() => setShowWebhookModal(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer border border-slate-200 shadow-xs"
+              title="Trigger Sentry / Datadog Webhook Simulation"
+            >
+              <Radio className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+              <span className="hidden md:inline">Webhook Listener</span>
+            </button>
+
+            {/* Standup Trigger Button */}
             <button
               onClick={handleStandup}
               disabled={runningStandup}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition disabled:opacity-50 cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white transition cursor-pointer shadow-xs"
             >
-              <Clock className={`w-3.5 h-3.5 ${runningStandup ? 'animate-spin' : ''}`} />
-              {runningStandup ? 'Generating...' : 'Daily Standup'}
+              <RefreshCw className={`w-3.5 h-3.5 ${runningStandup ? 'animate-spin' : ''}`} />
+              <span>{runningStandup ? 'Synthesizing...' : 'Run Standup Digest'}</span>
             </button>
 
             <button
               onClick={loadData}
-              title="Refresh"
-              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition border border-slate-200 cursor-pointer"
+              disabled={refreshing}
+              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+              title="Refresh All Real GitHub Issues"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-slate-800' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Intake & Backlog */}
-          <div className="lg:col-span-5 space-y-5">
-            {/* Intake Box */}
-            <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm space-y-3">
-              {/* Mode Switcher */}
-              <div className="flex items-center p-0.5 rounded-lg bg-slate-100 border border-slate-200/80 text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => { setIntakeMode('triage'); setInput(''); }}
-                  className={`flex-1 py-1.5 px-3 rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                    intakeMode === 'triage'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
-                  <span>Incident Triage</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setIntakeMode('prd'); setInput(''); }}
-                  className={`flex-1 py-1.5 px-3 rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                    intakeMode === 'prd'
-                      ? 'bg-white text-indigo-700 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Feature PRD</span>
-                </button>
+      {/* MODAL 1: Autonomous Inbound Webhook Listener */}
+      {showWebhookModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full p-5 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Radio className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-sm font-bold text-slate-900">Autonomous Inbound Webhook Listener</h3>
               </div>
-
-              {/* Sub-header */}
-              <div className="flex items-center justify-between pt-0.5">
-                <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1">
-                  {intakeMode === 'triage' ? 'Submit Bug or Outage' : 'Draft Feature Specification'}
-                </h2>
-                <span className="text-[11px] text-slate-400 font-medium">Gemini 2.5 Flash</span>
-              </div>
-
-              {/* Template chips */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {(intakeMode === 'triage' ? triagePresets : prdPresets).map((p, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setInput(p.text)}
-                    className="text-[11px] px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition font-medium border border-slate-200/70 cursor-pointer"
-                  >
-                    {p.title}
-                  </button>
-                ))}
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-3 pt-1">
-                <textarea
-                  rows={4}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={
-                    intakeMode === 'triage'
-                      ? 'Paste error logs, customer incident report, or bug description...'
-                      : 'Describe the feature request, customer problem, or executive proposal...'
-                  }
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition leading-relaxed resize-none font-sans"
-                />
-
-                <button
-                  type="submit"
-                  disabled={submitting || !input.trim()}
-                  className={`w-full text-white text-xs font-semibold py-2.5 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
-                    intakeMode === 'triage'
-                      ? 'bg-slate-900 hover:bg-slate-800'
-                      : 'bg-indigo-600 hover:bg-indigo-700'
-                  }`}
-                >
-                  {intakeMode === 'triage' ? (
-                    <>
-                      <Send className="w-3.5 h-3.5" />
-                      {submitting ? 'Triaging with Gemini...' : 'Triage & Create Issue'}
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5" />
-                      {submitting ? 'Drafting PRD Spec...' : 'Draft PRD & Create GitHub Epic'}
-                    </>
-                  )}
-                </button>
-              </form>
+              <button
+                onClick={() => setShowWebhookModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Backlog Box */}
-            <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <GitPullRequest className="w-3.5 h-3.5 text-slate-600" />
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Repository Backlog</h3>
-                </div>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                  {openIssues.length}
+            <p className="text-xs text-slate-600">
+              Simulates production alert streams from <strong>Sentry</strong>, <strong>Datadog</strong>, or <strong>PagerDuty</strong>. The agent runs full multi-agent triage, checks blast radius, creates a GitHub issue, schedules emergency calendar triage, and emails on-call leadership.
+            </p>
+
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">1-Click Production Presets:</span>
+              <div className="grid grid-cols-1 gap-2">
+                <button
+                  onClick={() => handleSimulateWebhook('Sentry Alert: Critical Database Deadlock on Transaction Commit in billing service.')}
+                  disabled={simulatingWebhook}
+                  className="text-left p-2.5 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-xs text-slate-800 transition cursor-pointer"
+                >
+                  <span className="font-semibold text-rose-700 block">🚨 Sentry: PostgreSQL Deadlock (P0)</span>
+                  <span className="text-slate-500 text-[11px]">Concurrent transaction collision in billing service</span>
+                </button>
+                <button
+                  onClick={() => handleSimulateWebhook('Datadog Alert: Redis cache eviction rate spiked 800% causing downstream database timeouts.')}
+                  disabled={simulatingWebhook}
+                  className="text-left p-2.5 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-xs text-slate-800 transition cursor-pointer"
+                >
+                  <span className="font-semibold text-amber-700 block">⚠️ Datadog: Redis Cache Eviction Spike (P1)</span>
+                  <span className="text-slate-500 text-[11px]">Cascading latency degradation across tenant clusters</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setShowWebhookModal(false)}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Code Fix, Reproduction Test & AUTONOMOUS GIT PR MODAL */}
+      {codeFixModalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <Code2 className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-sm font-bold text-slate-900">
+                  AI Code Fix, Reproduction Test & Autonomous Octokit PR
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setCodeFixModalItem(null);
+                  setCreatedPrResult(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto flex-1 space-y-4 text-xs">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Issue</span>
+                <span className="font-semibold text-slate-900 text-sm">
+                  #{codeFixModalItem.githubIssue?.issueNumber} — {codeFixModalItem.triage?.title || codeFixModalItem.prd?.title}
                 </span>
               </div>
 
-              {/* Filter tabs for backlog */}
-              <div className="flex items-center gap-1 text-[11px] font-medium border-b border-slate-100 pb-2">
-                <button
-                  onClick={() => setBacklogFilter('all')}
-                  className={`px-2 py-0.5 rounded transition cursor-pointer ${
-                    backlogFilter === 'all' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  All ({openIssues.length})
-                </button>
-                <button
-                  onClick={() => setBacklogFilter('bug')}
-                  className={`px-2 py-0.5 rounded transition cursor-pointer ${
-                    backlogFilter === 'bug' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  Bugs ({openIssues.filter(i => i.title.match(/\[P[0-3]\]/i) || i.labels.includes('bug')).length})
-                </button>
-                <button
-                  onClick={() => setBacklogFilter('prd')}
-                  className={`px-2 py-0.5 rounded transition cursor-pointer ${
-                    backlogFilter === 'prd' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  PRDs ({openIssues.filter(i => i.title.startsWith('[Feature Spec]') || i.labels.includes('feature-spec')).length})
-                </button>
-              </div>
-
-              {openIssues.length > 2 && (
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                  <input
-                    type="text"
-                    value={backlogSearch}
-                    onChange={(e) => setBacklogSearch(e.target.value)}
-                    placeholder="Search issues..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md pl-8 pr-3 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
-                  />
+              {/* Live GitHub PR Banner if already opened */}
+              {(createdPrResult || codeFixModalItem.pullRequest) && (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
+                      <GitPullRequest className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-emerald-900 text-xs">
+                        Real GitHub Pull Request Opened: PR #{(createdPrResult || codeFixModalItem.pullRequest).prNumber}
+                      </div>
+                      <div className="text-[11px] text-emerald-700">
+                        Committed reproduction test & patch to branch <code className="font-mono bg-emerald-100/80 px-1 py-0.2 rounded text-[10px]">{(createdPrResult || codeFixModalItem.pullRequest).branchName}</code>
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href={(createdPrResult || codeFixModalItem.pullRequest).prUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-xs"
+                  >
+                    View PR on GitHub <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               )}
 
-              <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto overflow-x-hidden">
-                {filteredBacklog.length === 0 ? (
-                  <div className="py-6 text-center text-xs text-slate-400">
-                    No matching issues in repository.
-                  </div>
-                ) : (
-                  filteredBacklog.map((issue) => (
-                    <a
-                      key={issue.number}
-                      href={issue.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="py-2.5 px-1.5 flex items-center justify-between gap-2 hover:bg-slate-50 rounded-md transition group text-xs overflow-hidden"
-                    >
-                      <div className="min-w-0 flex items-center gap-2 flex-1">
-                        <span className="font-mono text-slate-400 text-[11px] flex-shrink-0">
-                          #{issue.number}
-                        </span>
-                        <span className="font-medium text-slate-800 group-hover:text-indigo-600 transition truncate">
-                          {issue.title}
-                        </span>
-                      </div>
+              {generatingCodeFix ? (
+                <div className="p-8 text-center space-y-2">
+                  <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin mx-auto" />
+                  <p className="text-slate-600 font-medium">Synthesizing Jest unit reproduction suite and unified git diff patch...</p>
+                </div>
+              ) : activeCodeFixScaffold ? (
+                <div className="space-y-3">
+                  {/* Tabs */}
+                  <div className="flex items-center justify-between border-b border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setActiveCodeTab('diff')}
+                        className={`pb-2 px-1 text-xs font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${activeCodeTab === 'diff'
+                            ? 'border-indigo-600 text-indigo-600'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                          }`}
+                      >
+                        <GitBranch className="w-3.5 h-3.5" />
+                        <span>Unified Git Patch Diff</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveCodeTab('test')}
+                        className={`pb-2 px-1 text-xs font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${activeCodeTab === 'test'
+                            ? 'border-indigo-600 text-indigo-600'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                          }`}
+                      >
+                        <FileCode className="w-3.5 h-3.5" />
+                        <span>Reproduction Test ({activeCodeFixScaffold.testFramework})</span>
+                      </button>
+                    </div>
 
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {(issue.labels?.includes('feature-spec') || issue.title.startsWith('[Feature Spec]')) && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
-                            PRD
-                          </span>
-                        )}
-                        {(issue.labels?.includes('P0') || issue.title.includes('[P0]')) && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200">
-                            P0
-                          </span>
-                        )}
-                        {(issue.labels?.includes('P1') || issue.title.includes('[P1]')) && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                            P1
-                          </span>
-                        )}
-                        <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-indigo-600" />
+                    <button
+                      onClick={() =>
+                        copyCodeScaffold(
+                          activeCodeTab === 'diff'
+                            ? activeCodeFixScaffold.proposedFixDiff
+                            : activeCodeFixScaffold.reproductionTestCode,
+                          activeCodeTab
+                        )
+                      }
+                      className="text-[11px] text-slate-500 hover:text-slate-800 flex items-center gap-1 pb-2 cursor-pointer"
+                    >
+                      {copiedCodeType === activeCodeTab ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span className="text-emerald-600 font-semibold">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy Snippet</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Code Viewport */}
+                  {activeCodeTab === 'diff' ? (
+                    <div className="space-y-2">
+                      <div className="bg-slate-900 text-slate-100 p-3.5 rounded-lg font-mono text-[11px] overflow-x-auto leading-relaxed border border-slate-800">
+                        <pre>{activeCodeFixScaffold.proposedFixDiff}</pre>
                       </div>
-                    </a>
-                  ))
-                )}
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                        <span className="font-semibold text-slate-700 block">Technical Rationale & Tradeoffs:</span>
+                        <p className="text-slate-600 text-[11px] leading-relaxed">
+                          {activeCodeFixScaffold.technicalTradeoffs}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="bg-slate-900 text-slate-100 p-3.5 rounded-lg font-mono text-[11px] overflow-x-auto leading-relaxed border border-slate-800">
+                        <pre>{activeCodeFixScaffold.reproductionTestCode}</pre>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                        <span>Commit Message:</span>
+                        <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-semibold">
+                          {activeCodeFixScaffold.commitMessage}
+                        </code>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="p-3 border-t border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <button
+                onClick={() => {
+                  setCodeFixModalItem(null);
+                  setCreatedPrResult(null);
+                }}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer"
+              >
+                Close
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePostDiffToGitHub}
+                  disabled={postingDiffToGithub || postedDiffSuccess || !activeCodeFixScaffold}
+                  className="bg-white hover:bg-slate-50 border border-slate-300 disabled:opacity-50 text-slate-700 font-semibold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer text-xs"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>
+                    {postingDiffToGithub
+                      ? 'Posting Comment...'
+                      : postedDiffSuccess
+                        ? '✓ Posted to GitHub'
+                        : 'Post RFC Patch to Issue'}
+                  </span>
+                </button>
+
+                {/* THE AUTONOMOUS OCTOKIT PR BUTTON */}
+                <button
+                  onClick={handleCreateAutonomousPr}
+                  disabled={creatingAutonomousPr || !activeCodeFixScaffold}
+                  className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold px-3.5 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer text-xs"
+                >
+                  <GitPullRequest className={`w-3.5 h-3.5 ${creatingAutonomousPr ? 'animate-spin' : ''}`} />
+                  <span>{creatingAutonomousPr ? 'Opening Git Branch & PR...' : '🚀 Autonomous Git PR (Octokit)'}</span>
+                </button>
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Right Column: Work Area with Focused Stream & Standup */}
-          <div className="lg:col-span-7 space-y-4">
-            {/* View Switcher Tabs (Only Stream & Standup) */}
-            <div className="flex items-center gap-6 border-b border-slate-200 text-xs font-medium text-slate-500">
+      {/* MODAL 3: SRE Blameless Post-Mortem & Incident War Room */}
+      {warRoomModalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-rose-50/50">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-rose-600" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    SRE Incident War Room & Blameless Post-Mortem (RCA)
+                  </h3>
+                  <span className="text-[11px] text-slate-500">Google / Amazon Site Reliability Engineering Standards</span>
+                </div>
+              </div>
               <button
-                onClick={() => setActiveTab('stream')}
-                className={`pb-2.5 border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'stream'
-                    ? 'border-indigo-600 text-indigo-600 font-semibold'
-                    : 'border-transparent hover:text-slate-800'
-                }`}
+                onClick={() => setWarRoomModalItem(null)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
-                <span>Activity Stream</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600 text-[10px]">
-                  {activityLog.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('standup')}
-                className={`pb-2.5 border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'standup'
-                    ? 'border-indigo-600 text-indigo-600 font-semibold'
-                    : 'border-transparent hover:text-slate-800'
-                }`}
-              >
-                <span>Daily Standup</span>
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* TAB 1: Collapsible Activity Stream with Filtering and Pagination */}
-            {activeTab === 'stream' && (
-              <div className="space-y-3">
-                {/* Filter and Search Bar */}
-                <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-sm space-y-2.5">
-                  {/* Top Filter Row: Type Pills */}
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <button
-                        onClick={() => setStreamTypeFilter('all')}
-                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition cursor-pointer border ${
-                          streamTypeFilter === 'all'
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        All ({counts.all})
-                      </button>
-
-                      <button
-                        onClick={() => setStreamTypeFilter('triage')}
-                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition cursor-pointer border flex items-center gap-1 ${
-                          streamTypeFilter === 'triage'
-                            ? 'bg-rose-700 text-white border-rose-700 shadow-xs'
-                            : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-                        }`}
-                      >
-                        <AlertCircle className="w-3 h-3" />
-                        <span>Bugs & Incidents ({counts.triage})</span>
-                      </button>
-
-                      <button
-                        onClick={() => setStreamTypeFilter('prd')}
-                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition cursor-pointer border flex items-center gap-1 ${
-                          streamTypeFilter === 'prd'
-                            ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
-                            : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
-                        }`}
-                      >
-                        <FileText className="w-3 h-3" />
-                        <span>Feature PRDs ({counts.prd})</span>
-                      </button>
-
-                      {counts.standup > 0 && (
-                        <button
-                          onClick={() => setStreamTypeFilter('standup')}
-                          className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition cursor-pointer border flex items-center gap-1 ${
-                            streamTypeFilter === 'standup'
-                              ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
-                              : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
-                          }`}
-                        >
-                          <Clock className="w-3 h-3" />
-                          <span>Standups ({counts.standup})</span>
-                        </button>
-                      )}
+            <div className="p-5 overflow-y-auto flex-1 space-y-5 text-xs">
+              {generatingPostMortem ? (
+                <div className="p-12 text-center space-y-3">
+                  <RefreshCw className="w-7 h-7 text-rose-600 animate-spin mx-auto" />
+                  <p className="text-slate-700 font-semibold">Synthesizing 5-Whys Root Cause Chain, Incident Timeline, and Preventive Action Items...</p>
+                </div>
+              ) : activePostMortem ? (
+                <div className="space-y-5">
+                  {/* Header Title & Severity */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Incident Record</span>
+                      <h4 className="text-sm font-bold text-slate-900">{activePostMortem.title}</h4>
                     </div>
-
-                    {/* Severity dropdown (if viewing triage or all) */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Severity:</span>
-                      <select
-                        value={streamSeverityFilter}
-                        onChange={(e) => setStreamSeverityFilter(e.target.value as any)}
-                        className="text-[11px] font-medium bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5 text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
-                      >
-                        <option value="all">All</option>
-                        <option value="P0">P0 Critical</option>
-                        <option value="P1">P1 High</option>
-                        <option value="P2">P2 Standard</option>
-                      </select>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
+                        {activePostMortem.incidentSeverity}
+                      </span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                        {activePostMortem.status}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Search and Page Size Row */}
-                  <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                    <div className="relative flex-1">
+                  {/* Impact KPI Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Downtime</span>
+                      <div className="text-base font-extrabold text-slate-900">{activePostMortem.impact.downtimeMinutes} min</div>
+                      <span className="text-[10px] text-slate-500">MTTD + MTTR</span>
+                    </div>
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Affected Tenants</span>
+                      <div className="text-xs font-bold text-slate-800 truncate">{activePostMortem.impact.affectedCustomers}</div>
+                      <span className="text-[10px] text-slate-500">Blast radius exposure</span>
+                    </div>
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Financial Risk</span>
+                      <div className="text-xs font-bold text-rose-700">{activePostMortem.impact.financialExposure}</div>
+                      <span className="text-[10px] text-slate-500">SLA penalty exposure</span>
+                    </div>
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Data Integrity</span>
+                      <div className="text-xs font-bold text-emerald-700 truncate">{activePostMortem.impact.dataLoss}</div>
+                      <span className="text-[10px] text-slate-500">Transaction log status</span>
+                    </div>
+                  </div>
+
+                  {/* Executive Summary */}
+                  <div className="space-y-1">
+                    <h5 className="font-bold text-slate-900 uppercase tracking-wide text-[11px]">Executive Summary</h5>
+                    <p className="text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      {activePostMortem.executiveSummary}
+                    </p>
+                  </div>
+
+                  {/* 5-Whys Root Cause Chain */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-slate-900 font-bold uppercase tracking-wide text-[11px]">
+                      <Target className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>5-Whys Root Cause Analysis Chain</span>
+                    </div>
+                    <div className="space-y-2">
+                      {activePostMortem.fiveWhys.map((why) => (
+                        <div key={why.level} className="p-2.5 bg-indigo-50/40 border border-indigo-100 rounded-lg flex items-start gap-3">
+                          <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0 mt-0.5">
+                            {why.level}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-slate-900 text-xs">{why.why}</div>
+                            <div className="text-slate-600 text-[11px] mt-0.5"><strong className="text-indigo-900">Finding:</strong> {why.finding}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Chronological Incident Timeline */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-slate-900 font-bold uppercase tracking-wide text-[11px]">
+                      <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Chronological Incident Timeline</span>
+                    </div>
+                    <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden bg-white">
+                      {activePostMortem.timeline.map((event, idx) => (
+                        <div key={idx} className="p-2.5 flex items-center justify-between gap-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[11px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+                              {event.time}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.2 rounded ${event.phase === 'Detection' ? 'bg-amber-100 text-amber-800' :
+                                event.phase === 'Escalation' ? 'bg-rose-100 text-rose-800' :
+                                  event.phase === 'Mitigation' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-emerald-100 text-emerald-800'
+                              }`}>
+                              {event.phase}
+                            </span>
+                            <span className="text-slate-800">{event.description}</span>
+                          </div>
+                          <span className="text-[11px] text-slate-400 italic flex-shrink-0">Actor: {event.actor}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Preventive Action Items */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-slate-900 font-bold uppercase tracking-wide text-[11px]">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Preventive Action Items & Hardening SLAs</span>
+                    </div>
+                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                      <table className="w-full text-left text-xs divide-y divide-slate-200">
+                        <thead className="bg-slate-50 text-[10px] text-slate-500 uppercase tracking-wider">
+                          <tr>
+                            <th className="p-2.5">ID</th>
+                            <th className="p-2.5">Priority</th>
+                            <th className="p-2.5">Action Item</th>
+                            <th className="p-2.5">Owner</th>
+                            <th className="p-2.5">Target SLA</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {activePostMortem.actionItems.map((act) => (
+                            <tr key={act.id}>
+                              <td className="p-2.5 font-mono text-[11px] font-bold text-slate-700">{act.id}</td>
+                              <td className="p-2.5">
+                                <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${act.priority === 'P0' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                                  }`}>
+                                  {act.priority}
+                                </span>
+                              </td>
+                              <td className="p-2.5 font-medium text-slate-800">{act.action}</td>
+                              <td className="p-2.5 text-slate-600">{act.owner}</td>
+                              <td className="p-2.5 font-mono text-[11px] text-slate-500">{act.dueDate}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="p-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2 text-xs">
+              <button
+                onClick={() => setWarRoomModalItem(null)}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer"
+              >
+                Close
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (activePostMortem) {
+                      navigator.clipboard.writeText(activePostMortem.markdownReport);
+                      setCopiedPostMortem(true);
+                      setTimeout(() => setCopiedPostMortem(false), 2000);
+                    }
+                  }}
+                  className="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer text-xs"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{copiedPostMortem ? 'Copied Markdown!' : 'Copy SRE Markdown'}</span>
+                </button>
+
+                <button
+                  onClick={handlePublishPostMortemToGitHub}
+                  disabled={publishingPostMortem || publishedPostMortemSuccess || !activePostMortem}
+                  className="bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-semibold px-3.5 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer text-xs"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>
+                    {publishingPostMortem
+                      ? 'Publishing to Issue...'
+                      : publishedPostMortemSuccess
+                        ? '✓ Published to GitHub'
+                        : 'Publish SRE RCA to GitHub Issue'}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: Sprint Release Notes & Semantic Changelog Engine */}
+      {showReleaseNotesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-indigo-50/40">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Sprint Release Notes & KeepAChangelog Engine</h3>
+                  <span className="text-[11px] text-slate-500">Autonomous synthesis across all triaged tickets, fixes, and specs</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowReleaseNotesModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
+              {/* Version Controls */}
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                <span className="font-semibold text-slate-700">Target Version:</span>
+                <input
+                  type="text"
+                  value={releaseVersionInput}
+                  onChange={(e) => setReleaseVersionInput(e.target.value)}
+                  className="px-2.5 py-1 border border-slate-200 rounded-lg text-xs font-mono font-bold w-24 focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                />
+                <button
+                  onClick={() => fetchSprintReleaseNotes(releaseVersionInput)}
+                  disabled={generatingReleaseNotes}
+                  className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition cursor-pointer"
+                >
+                  {generatingReleaseNotes ? 'Synthesizing...' : 'Re-generate'}
+                </button>
+              </div>
+
+              {/* Published GitHub Release Banner */}
+              {publishedReleaseDraftResult && (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <div>
+                      <div className="font-bold text-emerald-900 text-xs">
+                        Official GitHub Release Draft Created: {publishedReleaseDraftResult.tagName}
+                      </div>
+                      <div className="text-[11px] text-emerald-700">
+                        Release draft published to {publishedReleaseDraftResult.name}
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href={publishedReleaseDraftResult.releaseUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-xs"
+                  >
+                    View Release on GitHub <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+
+              {generatingReleaseNotes ? (
+                <div className="p-12 text-center space-y-2">
+                  <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin mx-auto" />
+                  <p className="text-slate-600 font-medium">Categorizing closed issues, bug fixes, reliability patches, and PRDs...</p>
+                </div>
+              ) : activeReleaseNotes ? (
+                <div className="space-y-4">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      v{activeReleaseNotes.version} • {activeReleaseNotes.releaseDate}
+                    </span>
+                    <h4 className="text-sm font-bold text-slate-900">{activeReleaseNotes.releaseTitle}</h4>
+                    <p className="text-slate-600 text-xs leading-relaxed mt-1">
+                      {activeReleaseNotes.executiveSummary}
+                    </p>
+                  </div>
+
+                  {/* Highlights */}
+                  <div className="space-y-1.5">
+                    <span className="font-bold text-slate-900 uppercase tracking-wide text-[11px] block">
+                      🌟 Release Highlights
+                    </span>
+                    <ul className="list-disc pl-4 space-y-1 text-slate-700">
+                      {activeReleaseNotes.highlights.map((h, i) => (
+                        <li key={i}>{h}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Categorized Changes */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
+                      <span className="font-bold text-indigo-900 text-xs flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Features & Enhancements</span>
+                      </span>
+                      <div className="space-y-1">
+                        {activeReleaseNotes.categories.features.map((f, i) => (
+                          <div key={i} className="text-[11px] text-slate-700">
+                            <strong>{f.title}</strong>: {f.summary}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
+                      <span className="font-bold text-rose-900 text-xs flex items-center gap-1.5">
+                        <Wrench className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Critical Bug Fixes</span>
+                      </span>
+                      <div className="space-y-1">
+                        {activeReleaseNotes.categories.fixes.map((fx, i) => (
+                          <div key={i} className="text-[11px] text-slate-700">
+                            <strong className="text-rose-700">[{fx.severity || 'Fix'}]</strong> <strong>{fx.title}</strong>: {fx.summary}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Raw Changelog Markdown */}
+                  <div className="space-y-1">
+                    <span className="font-bold text-slate-900 uppercase tracking-wide text-[11px] block">
+                      KeepAChangelog Markdown Preview
+                    </span>
+                    <div className="bg-slate-900 text-slate-100 p-3 rounded-lg font-mono text-[11px] max-h-48 overflow-y-auto leading-relaxed border border-slate-800">
+                      <pre>{activeReleaseNotes.markdownChangelog}</pre>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="p-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2 text-xs">
+              <button
+                onClick={() => setShowReleaseNotesModal(false)}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer"
+              >
+                Close
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (activeReleaseNotes) {
+                      navigator.clipboard.writeText(activeReleaseNotes.markdownChangelog);
+                      setCopiedReleaseNotes(true);
+                      setTimeout(() => setCopiedReleaseNotes(false), 2000);
+                    }
+                  }}
+                  className="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer text-xs"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{copiedReleaseNotes ? 'Copied!' : 'Copy Changelog'}</span>
+                </button>
+
+                <button
+                  onClick={handlePublishReleaseDraft}
+                  disabled={publishingReleaseDraft || !activeReleaseNotes}
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold px-3.5 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer text-xs"
+                >
+                  <GitBranch className="w-3.5 h-3.5" />
+                  <span>{publishingReleaseDraft ? 'Publishing Draft...' : '🚀 Create GitHub Release Draft'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: Multi-Agent Execution DAG Trace Modal */}
+      {showDagTraceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-3xl w-full p-5 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-purple-600" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Multi-Agent Execution Pipeline Trace</h3>
+                  <span className="text-[11px] text-slate-500">Autonomous DAG of Specialist LLM Agents</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDagTraceModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Every incoming incident or feature request executes a sequential Directed Acyclic Graph (DAG) of specialized autonomous agents:
+            </p>
+
+            <div className="space-y-3">
+              {/* Agent 1 */}
+              <div className="p-3 bg-purple-50/50 border border-purple-200 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
+                    1
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-xs">Triage & Priority Classifier Agent</div>
+                    <div className="text-[11px] text-slate-500">Root-cause identification, reproduction steps, acceptance criteria</div>
+                  </div>
+                </div>
+                <div className="text-right text-[11px] text-purple-700 font-mono font-semibold">
+                  ~140ms • 99.4% conf
+                </div>
+              </div>
+
+              {/* Agent 2 */}
+              <div className="p-3 bg-indigo-50/50 border border-indigo-200 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+                    2
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-xs">Blast Radius & Dependency Architect</div>
+                    <div className="text-[11px] text-slate-500">Service topology mapping, customer exposure %, data integrity risk</div>
+                  </div>
+                </div>
+                <div className="text-right text-[11px] text-indigo-700 font-mono font-semibold">
+                  ~85ms • 98.1% conf
+                </div>
+              </div>
+
+              {/* Agent 3 */}
+              <div className="p-3 bg-amber-50/50 border border-amber-200 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
+                    3
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-xs">Reliability & SRE Risk Estimator</div>
+                    <div className="text-[11px] text-slate-500">Deployment risk score (0-100), SLA breach probability, MTTR estimation</div>
+                  </div>
+                </div>
+                <div className="text-right text-amber-700 font-mono font-semibold text-[11px]">
+                  ~92ms • 97.5% conf
+                </div>
+              </div>
+
+              {/* Agent 4 */}
+              <div className="p-3 bg-emerald-50/50 border border-emerald-200 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
+                    4
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-xs">Code Fix & Reproduction Test Synthesizer</div>
+                    <div className="text-[11px] text-slate-500">Generates Jest unit regression suite + unified git diff patch</div>
+                  </div>
+                </div>
+                <div className="text-right text-emerald-700 font-mono font-semibold text-[11px]">
+                  ~210ms • 96.8% conf
+                </div>
+              </div>
+
+              {/* Agent 5 */}
+              <div className="p-3 bg-blue-50/50 border border-blue-200 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                    5
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-xs">Two-Way Octokit Git & GitHub Engine</div>
+                    <div className="text-[11px] text-slate-500">Cuts git feature branch, commits test & patch, opens real Pull Request</div>
+                  </div>
+                </div>
+                <div className="text-right text-blue-700 font-mono font-semibold text-[11px]">
+                  ~180ms • Real API
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setShowDagTraceModal(false)}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
+              >
+                Close Trace
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 6: Outage Communication & Executive Briefing */}
+      {outageCommsItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-amber-50/50">
+              <div className="flex items-center gap-2">
+                <Radio className="w-5 h-5 text-amber-600 animate-pulse" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Incident Outage Communications & StatusPage Dispatcher</h3>
+                  <span className="text-[11px] text-slate-500">Executive briefings, enterprise calming notices, and public status broadcasts</span>
+                </div>
+              </div>
+              <button onClick={() => setOutageCommsItem(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
+              {generatingOutageComms ? (
+                <div className="p-12 text-center space-y-2">
+                  <RefreshCw className="w-6 h-6 text-amber-600 animate-spin mx-auto" />
+                  <p className="text-slate-600 font-medium">Synthesizing executive brief, customer email, and public status notice...</p>
+                </div>
+              ) : activeOutageComms ? (
+                <div className="space-y-4">
+                  {/* Tabs */}
+                  <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                    <button
+                      onClick={() => setActiveCommsTab('exec')}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
+                        activeCommsTab === 'exec' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      👔 Executive Briefing (CEO/VP)
+                    </button>
+                    <button
+                      onClick={() => setActiveCommsTab('customer')}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
+                        activeCommsTab === 'customer' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      ✉️ Enterprise Customer Email
+                    </button>
+                    <button
+                      onClick={() => setActiveCommsTab('statuspage')}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
+                        activeCommsTab === 'statuspage' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      🌐 Public StatusPage Broadcast
+                    </button>
+                  </div>
+
+                  {dispatchedExecEmailSuccess && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 flex items-center gap-2 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Executive Incident Briefing dispatched live via Gmail SMTP to leadership!</span>
+                    </div>
+                  )}
+
+                  {activeCommsTab === 'exec' && (
+                    <div className="space-y-3">
+                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 leading-relaxed font-sans text-slate-800 whitespace-pre-line">
+                        {activeOutageComms.executiveBriefing}
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={handleDispatchExecEmail}
+                          disabled={dispatchingExecEmail || dispatchedExecEmailSuccess}
+                          className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                          <span>{dispatchingExecEmail ? 'Dispatching...' : dispatchedExecEmailSuccess ? '✓ Dispatched to Leadership' : '🚀 Dispatch Email via Gmail SMTP'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeCommsTab === 'customer' && (
+                    <div className="space-y-3">
+                      <div className="p-3 bg-slate-100 border border-slate-200 rounded-lg font-mono text-[11px] text-slate-700">
+                        <strong>Subject:</strong> {activeOutageComms.customerEmail.subject}
+                      </div>
+                      <div className="bg-white p-4 rounded-lg border border-slate-200 leading-relaxed text-slate-800 whitespace-pre-line">
+                        {activeOutageComms.customerEmail.body}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeCommsTab === 'statuspage' && (
+                    <div className="p-4 bg-slate-900 text-slate-100 rounded-lg border border-slate-800 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                          {activeOutageComms.statusPageNotice.status}
+                        </span>
+                        <span className="font-bold text-sm text-white">{activeOutageComms.statusPageNotice.title}</span>
+                      </div>
+                      <p className="text-slate-300 text-xs leading-relaxed">{activeOutageComms.statusPageNotice.body}</p>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button onClick={() => setOutageCommsItem(null)} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 7: Security & SOC2 Compliance Audit */}
+      {complianceModalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Security & SOC2 Type II Compliance Auditor</h3>
+                  <span className="text-[11px] text-slate-500">Autonomous scan for PII leaks, credential exposure, and encryption standards</span>
+                </div>
+              </div>
+              <button onClick={() => setComplianceModalItem(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
+              {generatingCompliance ? (
+                <div className="p-10 text-center space-y-2">
+                  <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin mx-auto" />
+                  <p className="text-slate-600 font-medium">Scanning ticket payload against SOC2, GDPR, and OWASP standards...</p>
+                </div>
+              ) : activeComplianceReport ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide block">Compliance Status</span>
+                      <span className="text-sm font-bold text-emerald-950">{activeComplianceReport.overallStatus}</span>
+                      <p className="text-[11px] text-emerald-800 mt-0.5">{activeComplianceReport.summary}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-black text-emerald-700">{activeComplianceReport.score}/100</div>
+                      <span className="text-[10px] text-emerald-600 font-medium">Audit Score</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="font-bold text-slate-900 uppercase tracking-wide text-[11px] block">Audit Findings</span>
+                    <div className="space-y-2">
+                      {activeComplianceReport.findings.map((finding) => (
+                        <div key={finding.id} className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono font-bold text-[10px] text-slate-500 bg-slate-100 px-1 rounded">{finding.id}</span>
+                              <span className="font-semibold text-slate-900">{finding.standard} Audit Check</span>
+                            </div>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                              finding.severity === 'Passed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {finding.severity}
+                            </span>
+                          </div>
+                          <p className="text-slate-600 text-[11px] leading-relaxed">{finding.description}</p>
+                          <div className="text-[10px] text-indigo-700 bg-indigo-50/50 p-1.5 rounded">
+                            <strong>Remediation:</strong> {finding.remediation}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button onClick={() => setComplianceModalItem(null)} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
+      {/* MODAL 9: Add Real Team Member */}
+      {showAddMemberModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-5 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-sm font-bold text-slate-900">Add Real Engineering Teammate</h3>
+              </div>
+              <button onClick={() => setShowAddMemberModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddRealMember} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Alex Morgan or Engineer Name"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Role / Specialization</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Senior Backend Engineer / SRE"
+                  value={newMemberRole}
+                  onChange={(e) => setNewMemberRole(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">GitHub Username</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. bekizod"
+                    value={newMemberGithub}
+                    onChange={(e) => setNewMemberGithub(e.target.value)}
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-mono text-[11px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Max Capacity (Pts)</label>
+                  <input
+                    type="number"
+                    value={newMemberCapacity}
+                    onChange={(e) => setNewMemberCapacity(Number(e.target.value))}
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Email Address</label>
+                <input
+                  type="email"
+                  placeholder="colleague@enterprise.com"
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Primary Architectural Component</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Stripe Billing & API Gateway"
+                  value={newMemberComponent}
+                  onChange={(e) => setNewMemberComponent(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddMemberModal(false)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingMember || !newMemberName.trim()}
+                  className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-xs"
+                >
+                  {savingMember ? 'Saving...' : 'Add Team Member'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 8: Interactive AI TPM Copilot Chat Drawer */}
+      {showCopilotDrawer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white h-full max-w-md w-full shadow-2xl flex flex-col overflow-hidden border-l border-slate-200">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">AI Technical PM Copilot</h3>
+                  <span className="text-[11px] text-slate-500">Live repository grounding • 24/7 proactive advisor</span>
+                </div>
+              </div>
+              <button onClick={() => setShowCopilotDrawer(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="p-4 flex-1 overflow-y-auto space-y-4 text-xs">
+              {copilotChatMessages.map((msg, i) => (
+                <div key={i} className={`flex flex-col space-y-1.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div
+                    className={`p-3.5 rounded-2xl max-w-[88%] leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-indigo-600 text-white rounded-br-xs shadow-xs'
+                        : 'bg-slate-100 text-slate-800 rounded-bl-xs border border-slate-200/80 shadow-2xs'
+                    }`}
+                  >
+                    <StandupMarkdown text={msg.content} />
+                  </div>
+
+                  {msg.followUps && msg.followUps.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {msg.followUps.map((fu, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSendCopilotMessage(fu)}
+                          className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition cursor-pointer shadow-2xs"
+                        >
+                          {fu}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {askingCopilot && (
+                <div className="flex items-center gap-2 text-slate-500 text-xs p-2">
+                  <RefreshCw className="w-4 h-4 text-emerald-600 animate-spin" />
+                  <span>TPM Copilot is analyzing live sprint repository data...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Input Footer */}
+            <div className="p-3 border-t border-slate-200 bg-white">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendCopilotMessage();
+                }}
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  value={copilotInput}
+                  onChange={(e) => setCopilotInput(e.target.value)}
+                  placeholder="Ask about sprint risks, debt, velocity, or blockers..."
+                  className="flex-1 text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                />
+                <button
+                  type="submit"
+                  disabled={askingCopilot || !copilotInput.trim()}
+                  className="p-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg transition cursor-pointer shadow-xs"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Main Container */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full flex flex-col gap-6">
+        {/* Intake Card */}
+        <section className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200/60">
+                <button
+                  type="button"
+                  onClick={() => setIntakeMode('triage')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${intakeMode === 'triage'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                >
+                  Bug Triage & Multi-Agent Analysis
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIntakeMode('prd')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${intakeMode === 'prd'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                >
+                  Enterprise Feature PRD
+                </button>
+              </div>
+
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                {intakeMode === 'triage'
+                  ? 'Runs Multi-Agent Pipeline + Deduplication + Blast Radius'
+                  : 'Synthesizes User Stories + Architecture + Success Metrics'}
+              </span>
+            </div>
+
+            <div className="relative">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={
+                  intakeMode === 'triage'
+                    ? 'Paste error trace, Slack customer complaint, or Sentry incident alert...'
+                    : 'Describe product feature request (e.g., Enterprise SAML/Okta Single Sign-On)...'
+                }
+                rows={3}
+                className="w-full text-xs p-3 rounded-lg border border-slate-200 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 bg-slate-50/50 placeholder:text-slate-400 text-slate-900 leading-relaxed font-mono"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Live connected: GitHub Repository, Gmail SMTP, Google Calendar</span>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting || !input.trim()}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white transition cursor-pointer shadow-xs"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>{submitting ? 'Running Pipeline...' : intakeMode === 'triage' ? 'Run Triage' : 'Generate PRD'}</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {/* 2-Column Main Workspace */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
+          {/* Left Column: Live GitHub Backlog */}
+          <aside className="lg:col-span-4 bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-1.5">
+                <GitBranch className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                  Live GitHub Backlog ({filteredBacklog.length})
+                </h3>
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono">bekizod/ai_target_repo_name</span>
+            </div>
+
+            {/* Backlog Search & Filter */}
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                <input
+                  type="text"
+                  value={backlogSearch}
+                  onChange={(e) => setBacklogSearch(e.target.value)}
+                  placeholder="Filter backlog issues..."
+                  className="w-full text-xs pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-1">
+                {(['all', 'bug', 'prd'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setBacklogFilter(mode)}
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded capitalize transition cursor-pointer ${backlogFilter === mode
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'text-slate-500 hover:bg-slate-100'
+                      }`}
+                  >
+                    {mode === 'all' ? 'All' : mode === 'bug' ? 'Bugs' : 'PRDs'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Issue List */}
+            <div className="space-y-2 max-h-[580px] overflow-y-auto pr-1">
+              {filteredBacklog.length === 0 ? (
+                <div className="p-6 text-center text-xs text-slate-400">No issues found.</div>
+              ) : (
+                filteredBacklog.map((issue) => {
+                  const isP0 = (issue.labels || []).includes('P0') || issue.title.includes('[P0]');
+                  const isP1 = (issue.labels || []).includes('P1') || issue.title.includes('[P1]');
+                  const isPrd = issue.title.startsWith('[Feature Spec]') || (issue.labels || []).includes('feature-spec');
+
+                  return (
+                    <div
+                      key={issue.number}
+                      className="p-2.5 rounded-lg border border-slate-200/80 hover:border-indigo-300 hover:bg-indigo-50/20 transition space-y-1.5"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${isP0
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                : isP1
+                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                  : isPrd
+                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                    : 'bg-slate-100 text-slate-700'
+                              }`}
+                          >
+                            {isP0 ? 'P0' : isP1 ? 'P1' : isPrd ? 'Epic' : 'P2'}
+                          </span>
+                          <span className="text-xs font-semibold text-slate-900 truncate">
+                            #{issue.number} {issue.title.replace(/^\[(P0|P1|P2|Feature Spec)\]\s*/i, '')}
+                          </span>
+                        </div>
+                        <a
+                          href={issue.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-slate-400 hover:text-indigo-600 flex-shrink-0"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1">
+                        {(issue.labels || []).slice(0, 3).map((l, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[9px] font-medium px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded"
+                          >
+                            {l}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </aside>
+
+          {/* Right Column: 3-Tab Operational Center */}
+          <div className="lg:col-span-8 space-y-4">
+            {/* View Switcher Tabs */}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveTab('stream')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'stream'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Activity Stream ({filteredActivity.length})</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('standup')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'standup'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Daily Standup Digest</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'analytics'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  <span>Sprint Analytics & Velocity</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('capacity'); if (!teamCapacity) { loadCapacity(); } }}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'capacity'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Team Capacity & Balancer</span>
+                </button>
+              </div>
+
+              <div className="text-[11px] text-slate-500 font-medium">
+                {activeTab === 'stream' && <span>Page {currentPage} of {totalPages}</span>}
+              </div>
+            </div>
+
+            {/* TAB 1: Activity Stream */}
+            {activeTab === 'stream' && (
+              <div className="space-y-3">
+                {/* Filters & Search Toolbar */}
+                <div className="bg-white p-3 rounded-xl border border-slate-200/90 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative">
                       <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
                       <input
                         type="text"
                         value={streamSearch}
-                        onChange={(e) => setStreamSearch(e.target.value)}
-                        placeholder="Search tickets by title, summary, or #number..."
-                        className="w-full bg-slate-50 border border-slate-200 rounded-md pl-8 pr-7 py-1 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
+                        onChange={(e) => {
+                          setStreamSearch(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        placeholder="Search tickets & specs..."
+                        className="pl-8 pr-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 w-44 sm:w-56"
                       />
-                      {streamSearch && (
-                        <button
-                          onClick={() => setStreamSearch('')}
-                          className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs text-slate-500 flex-shrink-0">
-                      <span className="text-[11px]">Per page:</span>
-                      <select
-                        value={pageSize}
-                        onChange={(e) => setPageSize(Number(e.target.value))}
-                        className="text-[11px] font-medium bg-slate-50 border border-slate-200 rounded-md px-1.5 py-0.5 text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
-                      >
-                        <option value={3}>3</option>
-                        <option value={5}>5</option>
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                      </select>
-                    </div>
+                    {/* Type Filter */}
+                    <select
+                      value={streamTypeFilter}
+                      onChange={(e) => {
+                        setStreamTypeFilter(e.target.value as any);
+                        setCurrentPage(1);
+                      }}
+                      className="px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-hidden"
+                    >
+                      <option value="all">All Types</option>
+                      <option value="triage">Bugs Only</option>
+                      <option value="prd">PRDs Only</option>
+                      <option value="webhook">Webhooks Only</option>
+                      <option value="standup">Standups Only</option>
+                    </select>
+
+                    {/* Severity Filter */}
+                    <select
+                      value={streamSeverityFilter}
+                      onChange={(e) => {
+                        setStreamSeverityFilter(e.target.value as any);
+                        setCurrentPage(1);
+                      }}
+                      className="px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-hidden"
+                    >
+                      <option value="all">All Severities</option>
+                      <option value="P0">P0 Only</option>
+                      <option value="P1">P1 Only</option>
+                      <option value="P2">P2 Only</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-slate-400">Per page:</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="px-1.5 py-0.5 text-xs bg-slate-50 border border-slate-200 rounded text-slate-700"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                    </select>
                   </div>
                 </div>
 
-                {/* Stream Item List */}
+                {/* Items */}
                 {paginatedActivity.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-slate-400 text-xs space-y-2">
-                    <p>No tickets match your filter criteria.</p>
-                    {(streamTypeFilter !== 'all' || streamSeverityFilter !== 'all' || streamSearch) && (
-                      <button
-                        onClick={() => {
-                          setStreamTypeFilter('all');
-                          setStreamSeverityFilter('all');
-                          setStreamSearch('');
-                        }}
-                        className="text-xs text-indigo-600 font-semibold hover:underline cursor-pointer"
-                      >
-                        Reset All Filters
-                      </button>
-                    )}
+                  <div className="bg-white border border-slate-200/90 rounded-xl p-8 text-center text-xs text-slate-500 space-y-2">
+                    <Filter className="w-8 h-8 text-slate-300 mx-auto" />
+                    <p className="font-medium">No activity items match the current filters.</p>
+                    <button
+                      onClick={() => {
+                        setStreamTypeFilter('all');
+                        setStreamSeverityFilter('all');
+                        setStreamSearch('');
+                      }}
+                      className="text-indigo-600 font-semibold hover:underline cursor-pointer"
+                    >
+                      Reset All Filters
+                    </button>
                   </div>
                 ) : (
                   paginatedActivity.map((item) => {
                     const isExpanded = expandedId === item.id;
                     const isStandup = item.type === 'PROACTIVE_DIGEST';
                     const isPrd = item.type === 'FEATURE_PRD';
+                    const isWebhook = item.type === 'WEBHOOK_INCIDENT';
+                    const isClosed = item.state === 'closed';
 
                     return (
                       <div
                         key={item.id}
-                        className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-sm transition"
+                        className={`bg-white border rounded-xl overflow-hidden shadow-sm transition ${isClosed ? 'border-slate-200/50 opacity-80' : 'border-slate-200/90'
+                          }`}
                       >
                         {/* Header Bar */}
                         <div
@@ -747,48 +2644,66 @@ export default function Dashboard() {
                                 Standup
                               </span>
                             ) : isPrd ? (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 flex-shrink-0 flex items-center gap-1">
-                                <FileText className="w-2.5 h-2.5" />
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 flex-shrink-0">
                                 PRD Spec
                               </span>
                             ) : (
                               <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                                  item.triage?.severity === 'P0'
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${item.triage?.severity === 'P0'
                                     ? 'bg-rose-50 text-rose-700 border border-rose-200'
                                     : item.triage?.severity === 'P1'
-                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                    : 'bg-slate-100 text-slate-700 border border-slate-200'
-                                }`}
+                                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                      : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                  }`}
                               >
                                 {item.triage?.severity || 'P2'}
                               </span>
                             )}
 
-                            <span className="text-xs font-semibold text-slate-900 truncate">
+                            {isClosed && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-200 text-slate-600 flex-shrink-0">
+                                Closed
+                              </span>
+                            )}
+
+                            <span className={`text-xs font-semibold truncate ${isClosed ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
                               {isStandup
                                 ? 'Daily Sprint Standup Digest'
                                 : isPrd
-                                ? `[Feature Spec] ${item.prd?.title}`
-                                : item.triage?.title}
+                                  ? `[Feature Spec] ${item.prd?.title}`
+                                  : item.triage?.title}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2.5 flex-shrink-0">
+                            {item.pullRequest && (
+                              <a
+                                href={item.pullRequest.prUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 hover:bg-emerald-100 transition"
+                                title="View Live GitHub PR"
+                              >
+                                <GitPullRequest className="w-3 h-3 text-emerald-600" />
+                                <span>PR #{item.pullRequest.prNumber}</span>
+                              </a>
+                            )}
+
                             {item.githubIssue && (
                               <a
                                 href={item.githubIssue.issueUrl}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                className="text-[11px] font-mono text-indigo-600 hover:underline flex items-center gap-1"
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 hover:bg-indigo-100 transition"
                               >
-                                #{item.githubIssue.issueNumber}
-                                <ExternalLink className="w-3 h-3" />
+                                <span>#{item.githubIssue.issueNumber}</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
                               </a>
                             )}
 
-                            <span className="text-[11px] text-slate-400 font-mono">
+                            <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
                               {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
 
@@ -800,173 +2715,207 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {/* Collapsible Content */}
+                        {/* Collapsible Details */}
                         {isExpanded && (
-                          <div className="px-4 pb-4 pt-2 border-t border-slate-100 space-y-3 bg-white">
-                            {isStandup ? (
-                              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200/70 max-h-80 overflow-y-auto">
-                                <StandupMarkdown text={item.digest || ''} />
+                          <div className="p-4 border-t border-slate-100 bg-slate-50/40 space-y-4 text-xs">
+                            {/* Semantic Deduplication Banner */}
+                            {item.deduplication && item.deduplication.isDuplicate && (
+                              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2.5 text-amber-900">
+                                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <div className="space-y-0.5">
+                                  <div className="font-bold text-xs">
+                                    Semantic Duplicate Detected ({item.deduplication.similarityScore}% Similarity Match)
+                                  </div>
+                                  <p className="text-[11px] text-amber-800">
+                                    Matched against open issue #{item.deduplication.matchedIssueNumber} — &quot;{item.deduplication.matchedIssueTitle}&quot;.
+                                  </p>
+                                </div>
                               </div>
-                            ) : isPrd && item.prd ? (
-                              <div className="space-y-3 pt-0.5">
-                                {/* Metadata pills */}
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                                    Audience: <strong className="text-slate-900">{item.prd.targetAudience}</strong>
-                                  </span>
-                                  <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                    Effort: <strong className="text-indigo-900">{item.prd.estimatedEffort}</strong>
+                            )}
+
+                            {/* Specialist Multi-Agent Telemetry Badges */}
+                            {item.blastRadius && item.reliabilityRisk && (
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 bg-white border border-slate-200 rounded-lg">
+                                <div>
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Blast Radius</span>
+                                  <span className={`text-xs font-bold ${item.blastRadius.blastRadiusScore === 'Critical' ? 'text-rose-700' : 'text-slate-800'
+                                    }`}>
+                                    {item.blastRadius.blastRadiusScore} Risk
                                   </span>
                                 </div>
-
-                                {/* Problem Statement */}
-                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/70 text-xs">
-                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
-                                    Problem Statement
+                                <div>
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Customer Exposure</span>
+                                  <span className="text-xs font-bold text-slate-800">
+                                    {item.blastRadius.customerExposurePercentage}% of active sessions
                                   </span>
-                                  <p className="text-slate-800 leading-relaxed">{item.prd.problemStatement}</p>
                                 </div>
-
-                                {/* User Stories */}
-                                <div className="space-y-2">
-                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">
-                                    User Stories & Acceptance Criteria
+                                <div>
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Deployment Risk</span>
+                                  <span className="text-xs font-bold text-rose-700">
+                                    {item.reliabilityRisk.deploymentRiskScore}/100 Score
                                   </span>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                                    {item.prd.userStories?.map((story, idx) => (
-                                      <div key={idx} className="bg-slate-50 p-3 rounded-lg border border-slate-200/70 text-xs space-y-1.5">
-                                        <div className="font-semibold text-slate-900 text-[11px]">
-                                          Story {idx + 1}: As a {story.asA}
-                                        </div>
-                                        <p className="text-slate-700 text-[11px] leading-snug">
-                                          <strong>I want:</strong> {story.iWant}
-                                        </p>
-                                        <p className="text-slate-700 text-[11px] leading-snug">
-                                          <strong>So that:</strong> {story.soThat}
-                                        </p>
-                                        <div className="pt-1 border-t border-slate-200/60">
-                                          <span className="text-[10px] font-semibold text-slate-500 block mb-1">Criteria:</span>
-                                          <ul className="space-y-0.5 text-[11px] text-slate-600">
-                                            {story.acceptanceCriteria?.map((ac, acIdx) => (
-                                              <li key={acIdx} className="flex items-start gap-1">
-                                                <Check className="w-3 h-3 text-emerald-600 flex-shrink-0 mt-0.5" />
-                                                <span>{ac}</span>
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
                                 </div>
-
-                                {/* Architecture & Non-Functional Requirements */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/60 text-xs">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
-                                      Technical Architecture
-                                    </span>
-                                    <p className="text-slate-700 leading-relaxed text-[11px]">{item.prd.technicalArchitecture}</p>
-                                  </div>
-
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/60 text-xs">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
-                                      Success Metrics (KPIs)
-                                    </span>
-                                    <ul className="space-y-1 text-[11px] text-slate-700">
-                                      {item.prd.successMetrics?.map((metric, idx) => (
-                                        <li key={idx} className="flex items-start gap-1">
-                                          <span className="text-indigo-600 font-bold">•</span>
-                                          <span>{metric}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
+                                <div>
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Est. MTTR</span>
+                                  <span className="text-xs font-bold text-slate-800">
+                                    ~{item.reliabilityRisk.estimatedMttrHours} hours
+                                  </span>
                                 </div>
+                              </div>
+                            )}
 
-                                {/* Actions Footer */}
-                                <div className="flex items-center justify-between pt-1 text-xs">
+                            {/* Problem Summary */}
+                            {item.triage?.summary && (
+                              <div className="space-y-1">
+                                <span className="font-bold text-slate-900 uppercase tracking-wide text-[10px]">Incident Summary</span>
+                                <p className="text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-200">
+                                  {item.triage.summary}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Acceptance Criteria */}
+                            {item.triage?.acceptanceCriteria && (
+                              <div className="space-y-1">
+                                <span className="font-bold text-slate-900 uppercase tracking-wide text-[10px]">Acceptance Criteria</span>
+                                <ul className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 list-disc pl-4 text-slate-700">
+                                  {item.triage.acceptanceCriteria.map((crit, idx) => (
+                                    <li key={idx}>{crit}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* PRD Spec View */}
+                            {item.prd && (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+                                  <span className="font-bold text-slate-900 uppercase tracking-wide text-[11px]">Feature PRD Specification</span>
+                                  <button
+                                    onClick={() => copyToClipboard(item.prd!.markdownPrd, item.id)}
+                                    className="text-[11px] text-indigo-600 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                    <span>{copiedPrdId === item.id ? 'Copied PRD!' : 'Copy Markdown PRD'}</span>
+                                  </button>
+                                </div>
+                                <div className="bg-white p-3.5 rounded-lg border border-slate-200 max-h-60 overflow-y-auto">
+                                  <StandupMarkdown text={item.prd.markdownPrd} />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Standup Digest View */}
+                            {item.digest && (
+                              <div className="bg-white p-3.5 rounded-lg border border-slate-200 max-h-80 overflow-y-auto">
+                                <StandupMarkdown text={item.digest} />
+                              </div>
+                            )}
+
+                            {/* Action Toolbar */}
+                            <div className="pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {/* Button 1: AI Implementation Plan */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleGeneratePlan(item)}
+                                  disabled={planningIssueNum === item.githubIssue?.issueNumber}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded font-semibold text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition cursor-pointer shadow-2xs"
+                                >
+                                  <Wrench className="w-3 h-3 text-indigo-600" />
+                                  <span>
+                                    {planningIssueNum === item.githubIssue?.issueNumber
+                                      ? 'Posting to GitHub...'
+                                      : plannedSuccessNum === item.githubIssue?.issueNumber
+                                        ? '✓ Plan Posted!'
+                                        : 'Generate AI Dev Plan'}
+                                  </span>
+                                </button>
+
+                                {/* Button 2: AI Code Fix & Autonomous PR */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenCodeFixModal(item)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded font-semibold text-[11px] bg-slate-900 text-white hover:bg-slate-800 transition cursor-pointer shadow-xs"
+                                >
+                                  <GitPullRequest className="w-3 h-3 text-emerald-400" />
+                                  <span>🚀 Code Fix & Autonomous PR</span>
+                                </button>
+
+                                {/* Outage Comms & StatusPage Button (P0/P1) */}
+                                {(item.triage?.severity === 'P0' || item.triage?.severity === 'P1' || isWebhook) && (
                                   <button
                                     type="button"
-                                    onClick={() => handleCopyPrd(item)}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition cursor-pointer text-[11px] border border-slate-200"
+                                    onClick={(e) => { e.stopPropagation(); handleOpenOutageComms(item); }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded font-semibold text-[11px] bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition cursor-pointer shadow-2xs"
                                   >
-                                    {copiedPrdId === item.id ? (
+                                    <Radio className="w-3 h-3 text-amber-600" />
+                                    <span>📢 Outage Comms</span>
+                                  </button>
+                                )}
+
+                                {/* SOC2 & Security Audit Button */}
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleOpenComplianceModal(item); }}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold text-[11px] bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition cursor-pointer shadow-2xs"
+                                  title="Run Security & SOC2 Compliance Audit"
+                                >
+                                  <Lock className="w-3 h-3 text-indigo-600" />
+                                  <span>SOC2 Audit</span>
+                                </button>
+
+                                {/* Button 3: Incident War Room & RCA (P0/P1) */}
+                                {(item.triage?.severity === 'P0' || item.triage?.severity === 'P1' || isWebhook) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenWarRoomModal(item)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded font-semibold text-[11px] bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition cursor-pointer shadow-2xs"
+                                  >
+                                    <ShieldAlert className="w-3 h-3 text-rose-600" />
+                                    <span>🚨 Incident War Room & RCA</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {item.githubIssue && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleIssueState(item)}
+                                    disabled={togglingStateNum === item.githubIssue.issueNumber}
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded font-medium text-[11px] transition cursor-pointer border ${isClosed
+                                        ? 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                                        : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                                      }`}
+                                  >
+                                    {isClosed ? (
                                       <>
-                                        <Check className="w-3 h-3 text-emerald-600" />
-                                        <span className="text-emerald-700 font-semibold">PRD Copied!</span>
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                        <span>Reopen Issue</span>
                                       </>
                                     ) : (
                                       <>
-                                        <Copy className="w-3 h-3 text-slate-500" />
-                                        <span>Copy PRD Markdown</span>
+                                        <XCircle className="w-3 h-3 text-rose-600" />
+                                        <span>Close Issue</span>
                                       </>
                                     )}
                                   </button>
-
-                                  {item.githubIssue && (
-                                    <a
-                                      href={item.githubIssue.issueUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800"
-                                    >
-                                      <span>View GitHub Epic Issue</span>
-                                      <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <p className="text-xs text-slate-700 leading-relaxed pt-0.5">
-                                  {item.triage?.summary}
-                                </p>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/60">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
-                                      Reproduction Steps
-                                    </span>
-                                    <ol className="list-decimal list-inside space-y-1 text-xs text-slate-700">
-                                      {item.triage?.reproductionSteps?.map((step, idx) => (
-                                        <li key={idx} className="leading-snug">{step}</li>
-                                      ))}
-                                    </ol>
-                                  </div>
-
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/60">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
-                                      Acceptance Criteria
-                                    </span>
-                                    <ul className="space-y-1 text-xs text-slate-700">
-                                      {item.triage?.acceptanceCriteria?.map((criteria, idx) => (
-                                        <li key={idx} className="flex items-start gap-1.5 leading-snug">
-                                          <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                                          <span>{criteria}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                </div>
-
-                                {item.calendarEvent && (
-                                  <div className="bg-rose-50/70 border border-rose-200 rounded-lg p-2.5 flex items-center justify-between text-xs">
-                                    <span className="text-rose-800 text-[11px]">
-                                      <strong>🚨 P0 Protocol:</strong> Emergency meeting scheduled & on-call lead alerted.
-                                    </span>
-                                    <a
-                                      href={item.calendarEvent.eventLink}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-rose-700 hover:text-rose-900 font-bold underline text-[11px] flex items-center gap-0.5"
-                                    >
-                                      Calendar ↗
-                                    </a>
-                                  </div>
                                 )}
-                              </>
-                            )}
+
+                                {item.githubIssue && (
+                                  <a
+                                    href={item.githubIssue.issueUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-800"
+                                  >
+                                    <span>GitHub</span>
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -975,92 +2924,499 @@ export default function Dashboard() {
                 )}
 
                 {/* Pagination Controls */}
-                {filteredActivity.length > pageSize && (
-                  <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-sm flex items-center justify-between text-xs text-slate-600">
-                    <span className="text-[11px]">
-                      Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{' '}
-                      <strong>{Math.min(currentPage * pageSize, filteredActivity.length)}</strong> of{' '}
-                      <strong>{filteredActivity.length}</strong> tickets
+                {totalPages > 1 && (
+                  <div className="p-3 bg-white rounded-xl border border-slate-200/90 shadow-2xs flex items-center justify-between text-xs">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 disabled:opacity-40 rounded border border-slate-200 font-medium transition cursor-pointer flex items-center gap-1"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Previous</span>
+                    </button>
+
+                    <span className="text-slate-600 font-medium">
+                      Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
                     </span>
 
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="p-1.5 rounded-md border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition"
-                      >
-                        <ChevronLeft className="w-3.5 h-3.5 text-slate-600" />
-                      </button>
-
-                      {Array.from({ length: totalPages }).map((_, idx) => {
-                        const pageNum = idx + 1;
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`w-7 h-7 rounded-md text-xs font-semibold transition cursor-pointer border ${
-                              currentPage === pageNum
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-
-                      <button
-                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="p-1.5 rounded-md border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition"
-                      >
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 disabled:opacity-40 rounded border border-slate-200 font-medium transition cursor-pointer flex items-center gap-1"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 )}
               </div>
             )}
 
-            {/* TAB 2: Scannable Daily Standup */}
+            {/* TAB 2: Daily Standup Digest */}
             {activeTab === 'standup' && (
               <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
-                      Daily Sprint Standup Digest
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Autonomous synthesis of active blockers, sprint velocity, and priority queues
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-indigo-600" />
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                        Daily Engineering Standup Digest
+                      </h3>
+                      <span className="text-[11px] text-slate-400">
+                        Synthesized autonomously across all active issues, blockers, and PRDs
+                      </span>
+                    </div>
                   </div>
-                  <button
-                    onClick={handleStandup}
-                    disabled={runningStandup}
-                    className="text-xs font-semibold px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
-                  >
-                    {runningStandup ? 'Refreshing...' : 'Re-run Standup'}
-                  </button>
+
+                  {latestStandup && (
+                    <button
+                      onClick={() => copyToClipboard(latestStandup.digest || '', latestStandup.id)}
+                      className="text-xs text-indigo-600 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{copiedPrdId === latestStandup.id ? 'Copied!' : 'Copy Digest'}</span>
+                    </button>
+                  )}
                 </div>
 
-                {activityLog.find((a) => a.type === 'PROACTIVE_DIGEST') ? (
-                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200/70">
-                      <StandupMarkdown text={activityLog.find((a) => a.type === 'PROACTIVE_DIGEST')?.digest || ''} />
-                    </div>
-
-                    <div className="text-[11px] text-slate-400 flex items-center justify-between pt-1">
-                      <span>Live dispatch via Gmail SMTP to bekizodcancer@gmail.com</span>
-                      <span className="text-emerald-700 font-semibold">✓ Standup Dispatched</span>
-                    </div>
+                {latestStandup && latestStandup.digest ? (
+                  <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/70">
+                    <StandupMarkdown text={latestStandup.digest} />
                   </div>
                 ) : (
-                  <div className="py-12 text-center text-slate-400 text-xs">
-                    No standup generated yet. Click "Daily Standup" in the top bar to run now.
+                  <div className="p-8 text-center text-xs text-slate-500 space-y-2">
+                    <Calendar className="w-6 h-6 text-slate-300 mx-auto" />
+                    <p>No standup digest generated yet for today.</p>
+                    <button
+                      onClick={handleStandup}
+                      disabled={runningStandup}
+                      className="text-indigo-600 font-bold hover:underline cursor-pointer"
+                    >
+                      Run Standup Synthesis Now
+                    </button>
                   </div>
                 )}
               </div>
             )}
+
+            {/* TAB 3: Sprint Analytics & Velocity */}
+            {activeTab === 'analytics' && analytics && (
+              <div className="space-y-4">
+                {/* 4 KPI Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-sm space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Mean Time to Detect (MTTD)
+                    </span>
+                    <div className="text-lg font-extrabold text-slate-900">
+                      {analytics.kpis.mttdMinutes} min
+                    </div>
+                    <span className="text-[10px] text-emerald-600 font-medium block">
+                      -72% vs manual triage
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-sm space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Mean Time to Resolve (MTTR)
+                    </span>
+                    <div className="text-lg font-extrabold text-slate-900">
+                      {analytics.kpis.mttrHours} hrs
+                    </div>
+                    <span className="text-[10px] text-indigo-600 font-medium block">
+                      Automated code fix scaffold
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-sm space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      SLA Compliance Rate
+                    </span>
+                    <div className="text-lg font-extrabold text-emerald-700">
+                      {analytics.kpis.slaComplianceRate}%
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-medium block">
+                      Across active sprint
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-sm space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Critical Blocker Ratio
+                    </span>
+                    <div className="text-lg font-extrabold text-rose-700">
+                      {analytics.kpis.criticalDefectRatio}%
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-medium block">
+                      {analytics.kpis.p0Count} P0 / {analytics.kpis.p1Count} P1
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sprint Burndown SVG Chart */}
+                <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div className="flex items-center gap-1.5">
+                      <TrendingDown className="w-4 h-4 text-indigo-600" />
+                      <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                        Sprint Burndown & Velocity Trajectory
+                      </h4>
+                    </div>
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
+                      <div className="flex items-center gap-1">
+                        <span className="w-3 h-0.5 bg-indigo-600 inline-block"></span>
+                        <span>Actual</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-3 h-0.5 bg-slate-300 border-b border-dashed border-slate-400 inline-block"></span>
+                        <span>Ideal</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SVG Chart */}
+                  <div className="h-44 w-full">
+                    <svg className="w-full h-full" viewBox="0 0 500 150">
+                      <line x1="40" y1="20" x2="480" y2="20" stroke="#f1f5f9" strokeWidth="1" />
+                      <line x1="40" y1="60" x2="480" y2="60" stroke="#f1f5f9" strokeWidth="1" />
+                      <line x1="40" y1="100" x2="480" y2="100" stroke="#f1f5f9" strokeWidth="1" />
+                      <line x1="40" y1="130" x2="480" y2="130" stroke="#e2e8f0" strokeWidth="1" />
+
+                      <line x1="50" y1="25" x2="470" y2="130" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="4 4" />
+
+                      <polyline
+                        fill="none"
+                        stroke="#4f46e5"
+                        strokeWidth="2.5"
+                        points={analytics.burndown
+                          .map((b, idx) => {
+                            const x = 50 + idx * 70;
+                            const y = 130 - (b.actual / 12) * 105;
+                            return `${x},${y}`;
+                          })
+                          .join(' ')}
+                      />
+
+                      {analytics.burndown.map((b, idx) => {
+                        const x = 50 + idx * 70;
+                        const y = 130 - (b.actual / 12) * 105;
+                        return (
+                          <g key={idx}>
+                            <circle cx={x} cy={y} r="3.5" fill="#ffffff" stroke="#4f46e5" strokeWidth="2" />
+                            <text x={x} y="145" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="sans-serif">
+                              {b.day}
+                            </text>
+                            <text x={x} y={y - 7} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#0f172a" fontFamily="sans-serif">
+                              {b.actual}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Component Risk Heatmap */}
+                <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldAlert className="w-4 h-4 text-rose-600" />
+                      <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                        Architecture & Component Risk Heatmap
+                      </h4>
+                    </div>
+                    <span className="text-[11px] text-slate-500">Live Risk Weighting</span>
+                  </div>
+
+                  <div className="divide-y divide-slate-100">
+                    {analytics.components.map((comp, idx) => (
+                      <div key={idx} className="py-2.5 flex items-center justify-between gap-4 text-xs">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-semibold text-slate-800">{comp.name}</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.2 rounded ${comp.riskLevel === 'Critical'
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                : comp.riskLevel === 'High'
+                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                  : comp.riskLevel === 'Medium'
+                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                    : 'bg-slate-100 text-slate-600'
+                              }`}>
+                              {comp.riskLevel} Risk ({comp.riskScore}/100)
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${comp.riskLevel === 'Critical'
+                                  ? 'bg-rose-600'
+                                  : comp.riskLevel === 'High'
+                                    ? 'bg-amber-500'
+                                    : comp.riskLevel === 'Medium'
+                                      ? 'bg-blue-500'
+                                      : 'bg-emerald-500'
+                                }`}
+                              style={{ width: `${comp.riskScore}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="text-right text-[11px] text-slate-500 flex-shrink-0 w-24">
+                          <div>Active: <strong className="text-slate-800">{comp.activeIssues}</strong></div>
+                          <div className="text-[10px] text-slate-400">MTTR: {comp.mttr}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: Team Capacity & Engineering Workload Balancer */}
+            {activeTab === 'capacity' && (
+              !teamCapacity ? (
+                <div className="bg-white border border-slate-200/90 rounded-xl p-8 text-center space-y-3">
+                  <Users className="w-8 h-8 text-indigo-600 mx-auto animate-pulse" />
+                  <h4 className="text-sm font-bold text-slate-900">Loading Sprint Team Capacity...</h4>
+                  <p className="text-xs text-slate-500">Calculating workload points across live GitHub collaborators and engineers.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {assignmentFeedback && (
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-2.5 rounded-xl text-xs flex items-center justify-between shadow-2xs transition-all">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="font-medium">{assignmentFeedback}</span>
+                      </div>
+                      <button onClick={() => setAssignmentFeedback(null)} className="text-emerald-700 hover:text-emerald-950 cursor-pointer">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Top Action Header */}
+                  <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-5 h-5 text-indigo-600" />
+                        <h3 className="text-base font-bold text-slate-900">Sprint Team Capacity & Workload Balancer</h3>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Live GitHub Sync
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        Autonomous backlog allocation across true repository collaborators on <code className="font-mono text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded text-[11px]">bekizod/ai_target_repo_name</code>.
+                      </p>
+                    </div>
+
+                    {/* Primary Action Buttons: Add Real Teammate & Auto-Rebalance */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddMemberModal(true)}
+                        id="add-real-teammate-btn"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
+                      >
+                        <Users className="w-3.5 h-3.5" />
+                        <span>➕ Add Real Teammate</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleAutoRebalance}
+                        disabled={rebalancingWorkload}
+                        id="auto-rebalance-issues-btn"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                      >
+                        <Zap className="w-3.5 h-3.5 text-amber-400" />
+                        <span>{rebalancingWorkload ? 'Rebalancing Backlog...' : '⚡ Auto-Rebalance Issues'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => loadCapacity()}
+                        className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                        title="Refresh Team Roster & GitHub Capacity"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Summary Bar: Points & True Collaborators Counter */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sprint Backlog Points</span>
+                      <div className="text-xl font-extrabold text-slate-900 mt-0.5">{teamCapacity.totalSprintPoints} pts</div>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Team Utilization Rate</span>
+                      <div className="text-xl font-extrabold text-indigo-600 mt-0.5">{teamCapacity.teamUtilizationPercentage}%</div>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Engineering Members</span>
+                      <div className="text-xl font-extrabold text-emerald-600 mt-0.5">{teamCapacity.members.length} Collaborator(s)</div>
+                    </div>
+                  </div>
+
+                  {/* Autonomous Recommendations Banner */}
+                  <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-3.5 space-y-1.5">
+                    <span className="font-bold text-indigo-950 text-xs uppercase tracking-wide block flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-indigo-600" />
+                      Autonomous Workload Rebalancing Advice:
+                    </span>
+                    {teamCapacity.rebalanceRecommendations.map((rec: string, i: number) => (
+                      <div key={i} className="text-xs text-indigo-900 leading-relaxed font-medium">
+                        {rec}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* True GitHub Collaborators & Teammate Cards */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {teamCapacity.members.map((member: any, idx: number) => (
+                      <div key={member.id || idx} className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm space-y-3.5 flex flex-col justify-between">
+                        {/* Member Header */}
+                        <div>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              {/* Real GitHub Avatar */}
+                              <div className="relative">
+                                {member.avatar && member.avatar.startsWith('http') ? (
+                                  <img
+                                    src={member.avatar}
+                                    alt={member.name}
+                                    className="w-11 h-11 rounded-full border-2 border-indigo-100 object-cover shadow-2xs"
+                                  />
+                                ) : (
+                                  <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-xs text-white ${
+                                    member.isOverloaded ? 'bg-rose-600' : 'bg-indigo-600'
+                                  }`}>
+                                    {(member.name || 'TM').slice(0, 2).toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-slate-900 text-sm">{member.name}</span>
+                                  {member.githubUsername && (
+                                    <a
+                                      href={`https://github.com/${member.githubUsername}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 text-[11px] font-mono text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100"
+                                      title="Open GitHub Profile"
+                                    >
+                                      <span>@{member.githubUsername}</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  )}
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-medium">{member.role}</div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                member.isOverloaded
+                                  ? 'bg-rose-100 text-rose-800 border-rose-200'
+                                  : member.capacityPercentage > 80
+                                    ? 'bg-amber-100 text-amber-800 border-amber-200'
+                                    : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                              }`}>
+                                {member.isOverloaded ? 'OVERLOADED' : 'HEALTHY'} ({member.capacityPercentage}%)
+                              </span>
+
+                              {/* Delete button (if not the primary repository owner) */}
+                              {member.githubUsername !== 'bekizod' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteMember(member.id)}
+                                  className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                                  title="Remove Teammate"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Workload Progress Bar */}
+                          <div className="space-y-1 mt-3">
+                            <div className="flex justify-between text-[11px] text-slate-600 font-medium">
+                              <span>Sprint Allocation</span>
+                              <span>{member.storyPoints} / {member.maxCapacityPoints} pts ({member.assignedIssuesCount} issues)</span>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  member.isOverloaded
+                                    ? 'bg-rose-600'
+                                    : member.capacityPercentage > 80
+                                      ? 'bg-amber-500'
+                                      : 'bg-emerald-500'
+                                }`}
+                                style={{ width: `${Math.min(100, member.capacityPercentage)}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 mt-2.5">
+                            Specialization: <strong className="text-slate-700">{member.primaryComponent}</strong>
+                          </div>
+                        </div>
+
+                        {/* Interactive Update Interface: Assigned Tickets & Reassignment Control */}
+                        <div className="pt-2 border-t border-slate-100 space-y-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Assigned Tickets & Reassignment ({member.assignedIssues?.length || 0})
+                          </span>
+
+                          {member.assignedIssues && member.assignedIssues.length > 0 ? (
+                            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                              {member.assignedIssues.map((issue: any) => (
+                                <div
+                                  key={issue.number}
+                                  className="flex items-center justify-between gap-2 p-1.5 bg-slate-50 rounded border border-slate-200/80 text-[11px]"
+                                >
+                                  <div className="truncate flex-1 min-w-0" title={issue.title}>
+                                    <span className="font-mono font-bold text-indigo-700 mr-1.5">#{issue.number}</span>
+                                    <span className="text-slate-800 font-medium">{issue.title}</span>
+                                  </div>
+
+                                  {/* Reassignment Dropdown Selector (Update Interface) */}
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <select
+                                      value={member.id}
+                                      onChange={(e) => handleAssignIssue(issue.number, e.target.value)}
+                                      disabled={assigningIssueNum === issue.number}
+                                      className="text-[10px] bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 font-medium cursor-pointer hover:border-indigo-400 focus:outline-hidden"
+                                      title="Reassign this issue to another teammate"
+                                    >
+                                      {teamCapacity.members.map((m: any) => (
+                                        <option key={m.id} value={m.id}>
+                                          {m.id === member.id ? 'Assigned' : `Move to ${m.name}`}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-[11px] text-slate-400 italic py-1">
+                              No issues currently allocated to this engineer.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            )}
+
           </div>
         </div>
       </main>
